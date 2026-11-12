@@ -175,12 +175,8 @@ struct MenuBarHidingSettings: View {
 
             ForEach(selectableApps, id: \.bundleIdentifier) { app in
                 if let id = app.bundleIdentifier {
-                    SettingsRow(symbol: "app",
-                                title: app.localizedName ?? id,
-                                caption: nil) {
-                        Toggle(app.localizedName ?? id, isOn: binding(for: id))
-                            .labelsHidden()
-                    }
+                    AppSelectionRow(name: app.localizedName ?? id,
+                                    isHidden: binding(for: id))
                 }
             }
         }
@@ -207,5 +203,26 @@ struct MenuBarHidingSettings: View {
         runningApps = NSWorkspace.shared.runningApplications
         hiddenBundleIDs = UserDefaults.standard
             .stringArray(forKey: DefaultsKey.menuBarHidingHiddenBundleIDs) ?? []
+    }
+}
+
+/// One app in the macOS 27 picker. Deliberately not a `SettingsRow`: its title
+/// is an app name, not a localized setting label, so Settings search has no
+/// entry to point at and the coverage scan must not treat it as one.
+private struct AppSelectionRow: View {
+    let name: String
+    @Binding var isHidden: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "app")
+                .frame(width: 18)
+                .foregroundStyle(.secondary)
+            Text(name)
+            Spacer(minLength: 12)
+            Toggle(name, isOn: $isHidden)
+                .labelsHidden()
+        }
+        .padding(.vertical, 4)
     }
 }
