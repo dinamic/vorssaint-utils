@@ -24,6 +24,11 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
     /// decides it; the service just mirrors it on every refresh.
     @Published private(set) var state: MenuBarHidingState = .expanded
 
+    /// Which mechanism the installed engine uses. The Settings card branches on
+    /// it: the width engine is placed with a draggable separator, the macOS 27
+    /// assessment engine conceals whole apps and has no separator at all.
+    @Published private(set) var mechanism: MenuBarHidingMechanism = .width
+
     private static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "vorssaint",
                                     category: "menu-bar-hiding")
 
@@ -103,6 +108,7 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
         syncAlwaysHiddenItem(enabled: configuration.alwaysHiddenSection)
         engine?.updateAlwaysHiddenSection(enabled: configuration.alwaysHiddenSection,
                                           hidingSection: configuration.hideSeparators)
+        engine?.updateHiddenBundleIDs(configuration.hiddenBundleIDs)
         syncHoverMonitor(enabled: configuration.hoverToExpand)
         refreshToggleImage()
 
@@ -208,9 +214,28 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
 
         toggleItem = toggle
         separatorItem = separator
-        let engine = LengthMenuBarHidingEngine(items: self, log: { message in
+        let log: (String) -> Void = { message in
             Self.log.debug("\(message, privacy: .public)")
-        })
+        }
+        let mechanism = MenuBarHidingAssessment.mechanism(
+            osMajorVersion: ProcessInfo.processInfo.operatingSystemVersion.majorVersion,
+            classesLoaded: MenuBarHidingAssessmentRuntime.shared.isAvailable
+        )
+        self.mechanism = mechanism
+        let engine: MenuBarHidingEngine
+        switch mechanism {
+        case .assessment:
+            // macOS 27: conceal whole apps through the assessment-mode
+            // facility. The separator stays in the bar as a visual marker but
+            // is not the mechanism, and the Settings card says so.
+            engine = AssessmentMenuBarHidingEngine(
+                items: self,
+                hiddenBundleIDs: Configuration().hiddenBundleIDs,
+                log: log
+            )
+        case .width:
+            engine = LengthMenuBarHidingEngine(items: self, log: log)
+        }
         // A fail-open happens after the engine already reported a collapse, so
         // the arrow and the Settings card have to hear about it from here.
         engine.stateDidChange = { [weak self] in
@@ -218,7 +243,7 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
         }
         self.engine = engine
         refreshToggleImage()
-        Self.log.debug("menu bar items installed")
+        Self.log.debug("menu bar items installed with the \(mechanism == .assessment ? "assessment" : "width") engine")
     }
 
     private func syncAlwaysHiddenItem(enabled: Bool) {
@@ -257,6 +282,7 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
         alwaysHiddenItem = nil
         separatorItem = nil
         toggleItem = nil
+        engine?.stop()
         engine = nil
         state = .expanded
         // macOS keeps a removed item's saved position and visibility under its
@@ -348,7 +374,7 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
     }
 
     @objc private func openSettings() {
-        SettingsRouter.shared.request(FeatureSettingsDestination(.monitor, sectionAnchor: .menuBarHiding))
+        SettingsRouter.shared.request(FeatureSettingsDestination(.general, sectionAnchor: .menuBarHiding))
         (NSApp.delegate as? AppDelegate)?.openSettingsWindow()
     }
 
@@ -516,6 +542,9 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
         let hideSeparators: Bool
         let alwaysHiddenSection: Bool
         let startCollapsed: Bool
+        /// The apps the macOS 27 assessment engine conceals. Empty on the width
+        /// engine, which hides by position instead.
+        let hiddenBundleIDs: Set<String>
 
         init(defaults: UserDefaults = .standard) {
             enabled = defaults.bool(forKey: DefaultsKey.menuBarHidingEnabled)
@@ -527,6 +556,7 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
             hideSeparators = defaults.bool(forKey: DefaultsKey.menuBarHidingHideSeparators)
             alwaysHiddenSection = defaults.bool(forKey: DefaultsKey.menuBarHidingAlwaysHiddenSection)
             startCollapsed = defaults.bool(forKey: DefaultsKey.menuBarHidingStartCollapsed)
+            hiddenBundleIDs = Set(defaults.stringArray(forKey: DefaultsKey.menuBarHidingHiddenBundleIDs) ?? [])
         }
     }
 }

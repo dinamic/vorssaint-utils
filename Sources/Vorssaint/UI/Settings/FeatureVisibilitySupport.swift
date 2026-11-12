@@ -60,8 +60,9 @@ enum SettingsSectionAnchor: String, CaseIterable, Hashable {
     case keyboardBrightnessShortcuts
     case fanControl
     case monitorAlerts
-    /// The menu bar hiding card on the Monitor page: the one place its switch
-    /// and behaviors live, and where the arrow's menu sends the user.
+    /// The menu bar hiding card under Settings → General → Menu bar: the one
+    /// place its switch and behaviors live, and where the arrow's menu sends
+    /// the user.
     case menuBarHiding
     case windowMaximizer
 
@@ -84,7 +85,8 @@ enum SettingsSectionAnchor: String, CaseIterable, Hashable {
         case .screenshot, .screenshotScrolling, .screenRecorder, .colorPicker, .screenOCR:
             return .screenshot
         case .keyboardBrightnessShortcuts: return .shortcuts
-        case .fanControl, .monitorAlerts, .menuBarHiding: return .monitor
+        case .fanControl, .monitorAlerts: return .monitor
+        case .menuBarHiding: return .general
         case .windowMaximizer: return .windowLayout
         }
     }

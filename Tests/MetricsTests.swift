@@ -38,6 +38,7 @@ struct MetricsTests {
                 PointerScreenContract.run(suite)
             }),
             ("menu-bar-hiding", { MenuBarHidingTests.run(suite) }),
+            ("menu-bar-hiding-assessment", { MenuBarHidingAssessmentTests.run(suite) }),
             ("scroll-modifier", {
                 ScrollHorizontalModifierTests.run(suite)
                 ScrollZoomFocusTests.run(suite)

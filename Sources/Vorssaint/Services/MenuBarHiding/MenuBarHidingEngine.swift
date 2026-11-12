@@ -36,9 +36,18 @@ protocol MenuBarHidingEngine: AnyObject {
     /// separator has to sit on the hidden side of the arrow.
     var isArrangementValid: Bool { get }
 
+    /// The apps the user asked to conceal. The width engine ignores this; the
+    /// assessment engine rebuilds its allowlist from it.
+    func updateHiddenBundleIDs(_ ids: Set<String>)
+
     /// Display geometry changed. A collapsed bar has to take the new width,
     /// otherwise a display hot-plug leaves the separator at a stale size.
     func invalidateLayout()
+
+    /// Releases anything the engine holds outside the status items: a private
+    /// assertion, an observation, a pending activation. Called when the feature
+    /// is switched off and when the app quits.
+    func stop()
 }
 
 /// Hides icons by inflating the separator until everything on its far side
@@ -122,6 +131,10 @@ final class LengthMenuBarHidingEngine: MenuBarHidingEngine {
         hidingAlwaysHiddenSection = hidingSection
         applyAlwaysHiddenSection()
     }
+
+    func updateHiddenBundleIDs(_ ids: Set<String>) {}
+
+    func stop() {}
 
     func invalidateLayout() {
         guard state == .collapsed else { return }

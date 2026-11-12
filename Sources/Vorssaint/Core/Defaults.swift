@@ -443,6 +443,7 @@ enum DefaultsKey {
     static let menuBarHidingHideSeparators = "menuBarHidingHideSeparators" // keep the always hidden section hidden
     static let menuBarHidingAlwaysHiddenSection = "menuBarHidingAlwaysHiddenSection" // install the second separator
     static let menuBarHidingStartCollapsed = "menuBarHidingStartCollapsed" // collapse as soon as the feature is on
+    static let menuBarHidingHiddenBundleIDs = "menuBarHidingHiddenBundleIDs" // apps the macOS 27 engine conceals
     static let menuBarMetricOrder = "menuBarMetricOrder" // comma-separated MenuBarMetric raw values
     static let menuBarCombineTemperatures = "menuBarCombineTemperatures" // usage/charge + temperature in one block when possible
     static let menuBarSeparateMetrics = "menuBarSeparateMetrics" // one status item per active metric
@@ -1731,6 +1732,7 @@ enum Defaults {
         DefaultsKey.menuBarHidingHideSeparators: false,
         DefaultsKey.menuBarHidingAlwaysHiddenSection: false,
         DefaultsKey.menuBarHidingStartCollapsed: false,
+        DefaultsKey.menuBarHidingHiddenBundleIDs: [String](),
         DefaultsKey.windowLayoutHiddenActions: "",
         DefaultsKey.windowLayoutWindowGap: 0,
         DefaultsKey.windowLayoutScreenGap: 0,

@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Vorssaint
 
+import AppKit
 import SwiftUI
 
-/// The "Menu bar hiding" card on the Monitor page: the switch that installs the
-/// arrow and separator, and the handful of behaviors that make them usable.
+/// The "Menu bar hiding" card under Settings → General → Menu bar: the switch
+/// that installs the arrow and separator, and the handful of behaviors that
+/// make them usable.
+///
+/// The card has two shapes because the mechanism depends on the running macOS.
+/// Up to macOS 26 the bar reflows around an inflated separator, so the user
+/// places a boundary with `⌘`-drag. On macOS 27 that no longer works and the
+/// engine conceals whole apps through the assessment-mode facility instead:
+/// there is no separator to drag and no section boundary, so the card shows an
+/// app picker and says so rather than silently changing what the arrow means.
 ///
 /// Everything below the switch stays hidden while the feature is off, so the
 /// card reads as one decision with its consequences rather than a wall of
@@ -23,6 +32,9 @@ struct MenuBarHidingSettings: View {
     @AppStorage(DefaultsKey.menuBarHidingHoverToExpand) private var hoverToExpand = false
     @AppStorage(DefaultsKey.menuBarHidingAlwaysHiddenSection) private var alwaysHiddenSection = false
     @AppStorage(DefaultsKey.menuBarHidingHideSeparators) private var hideSeparators = false
+    @AppStorage(DefaultsKey.menuBarHidingHiddenBundleIDs) private var hiddenBundleIDs: [String] = []
+
+    @State private var runningApps: [NSRunningApplication] = []
 
     private var strings: MenuBarHidingStrings {
         FeatureStrings.menuBarHiding(l10n.language)
@@ -32,11 +44,35 @@ struct MenuBarHidingSettings: View {
         MenuBarHidingAutoCollapse.minimumSeconds...MenuBarHidingAutoCollapse.maximumSeconds
     }
 
+    private var isAssessment: Bool {
+        hiding.mechanism == .assessment
+    }
+
+    /// Apps the user can choose from: anything running that has a bundle
+    /// identifier and can own a menu bar item. Vorssaint itself is left out so
+    /// hiding it cannot take the arrow away.
+    private var selectableApps: [NSRunningApplication] {
+        let ownBundleID = Bundle.main.bundleIdentifier
+        return runningApps
+            .filter { app in
+                guard let id = app.bundleIdentifier else { return false }
+                return id != ownBundleID && app.activationPolicy != .prohibited
+            }
+            .sorted {
+                ($0.localizedName ?? $0.bundleIdentifier ?? "")
+                    < ($1.localizedName ?? $1.bundleIdentifier ?? "")
+            }
+    }
+
+    private var isOutsideApplications: Bool {
+        !Bundle.main.bundlePath.hasPrefix("/Applications/")
+    }
+
     var body: some View {
         SettingsCard(title: strings.section) {
             SettingsRow(symbol: "chevron.left",
                         title: strings.enableToggle,
-                        caption: strings.placementHint) {
+                        caption: isAssessment ? strings.assessmentCaption : strings.placementHint) {
                 Toggle(strings.enableToggle, isOn: $enabled)
                     .labelsHidden()
             }
@@ -47,9 +83,21 @@ struct MenuBarHidingSettings: View {
                 if hiding.state == .unavailable {
                     SettingsRow(symbol: "exclamationmark.triangle",
                                 title: strings.unavailableTitle,
-                                caption: strings.unavailableCaption) {
+                                caption: isAssessment ? strings.assessmentUnavailableCaption
+                                                      : strings.unavailableCaption) {
                         EmptyView()
                     }
+                }
+
+                if isAssessment {
+                    if isOutsideApplications {
+                        SettingsRow(symbol: "folder.badge.questionmark",
+                                    title: strings.applicationsFolderCaption,
+                                    caption: nil) {
+                            EmptyView()
+                        }
+                    }
+                    assessmentAppPicker
                 }
 
                 SettingsRow(symbol: "chevron.down",
@@ -80,20 +128,77 @@ struct MenuBarHidingSettings: View {
                         .labelsHidden()
                 }
 
-                SettingsRow(symbol: "rectangle.split.3x1",
-                            title: strings.alwaysHiddenToggle,
-                            caption: strings.alwaysHiddenCaption) {
-                    Toggle(strings.alwaysHiddenToggle, isOn: $alwaysHiddenSection)
-                        .labelsHidden()
-                }
+                // The always hidden section is a positional concept: it only
+                // exists where the width engine can place a second separator.
+                if !isAssessment {
+                    SettingsRow(symbol: "rectangle.split.3x1",
+                                title: strings.alwaysHiddenToggle,
+                                caption: strings.alwaysHiddenCaption) {
+                        Toggle(strings.alwaysHiddenToggle, isOn: $alwaysHiddenSection)
+                            .labelsHidden()
+                    }
 
-                if alwaysHiddenSection {
-                    SettingsRow(symbol: "eye.slash", title: strings.menuHideSections) {
-                        Toggle(strings.menuHideSections, isOn: $hideSeparators)
+                    if alwaysHiddenSection {
+                        SettingsRow(symbol: "eye.slash", title: strings.menuHideSections) {
+                            Toggle(strings.menuHideSections, isOn: $hideSeparators)
+                                .labelsHidden()
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear(perform: refreshRunningApps)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshRunningApps()
+        }
+    }
+
+    /// The macOS 27 selection surface: concealment is per app, so the user picks
+    /// apps rather than dragging a boundary. The list is a snapshot of what is
+    /// running; the engine keeps the allowlist current as apps launch.
+    private var assessmentAppPicker: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SettingsRow(symbol: "app.badge.checkmark",
+                        title: strings.appPickerTitle,
+                        caption: strings.appPickerCaption) {
+                Button {
+                    refreshRunningApps()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .help(strings.appPickerTitle)
+            }
+
+            ForEach(selectableApps, id: \.bundleIdentifier) { app in
+                if let id = app.bundleIdentifier {
+                    SettingsRow(symbol: "app",
+                                title: app.localizedName ?? id,
+                                caption: nil) {
+                        Toggle(app.localizedName ?? id, isOn: binding(for: id))
                             .labelsHidden()
                     }
                 }
             }
         }
+    }
+
+    private func binding(for bundleID: String) -> Binding<Bool> {
+        Binding(
+            get: { hiddenBundleIDs.contains(bundleID) },
+            set: { hidden in
+                if hidden {
+                    if !hiddenBundleIDs.contains(bundleID) {
+                        hiddenBundleIDs.append(bundleID)
+                    }
+                } else {
+                    hiddenBundleIDs.removeAll { $0 == bundleID }
+                }
+            }
+        )
+    }
+
+    private func refreshRunningApps() {
+        runningApps = NSWorkspace.shared.runningApplications
     }
 }

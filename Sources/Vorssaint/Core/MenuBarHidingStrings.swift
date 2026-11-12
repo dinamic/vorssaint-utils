@@ -35,6 +35,13 @@ struct MenuBarHidingStrings {
     let separatorAccessibilityLabel: String
     let unavailableTitle: String
     let unavailableCaption: String
+    /// macOS 27 conceals whole apps rather than a positional section, so the
+    /// card explains the different model instead of showing placement advice.
+    let assessmentCaption: String
+    let appPickerTitle: String
+    let appPickerCaption: String
+    let applicationsFolderCaption: String
+    let assessmentUnavailableCaption: String
 }
 
 extension FeatureStrings {
@@ -87,7 +94,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Hides the icons right away instead of waiting for you to click the arrow.",
         separatorAccessibilityLabel: "Menu bar section separator. Hold Command and drag to place it.",
         unavailableTitle: "Menu bar hiding is unavailable",
-        unavailableCaption: "This version of macOS does not let Vorssaint resize menu bar items, so the icons cannot be collapsed. Your menu bar was left unchanged."
+        unavailableCaption: "This version of macOS does not let Vorssaint resize menu bar items, so the icons cannot be collapsed. Your menu bar was left unchanged.",
+        assessmentCaption: "On this version of macOS, hiding works per app: choose the apps whose menu bar icons should be concealed. There is no separator to drag.",
+        appPickerTitle: "Apps to hide",
+        appPickerCaption: "Every other running app stays visible. New apps are added to the allowlist automatically.",
+        applicationsFolderCaption: "Vorssaint must run from /Applications for this to work. A copy run from Downloads or a build folder will hide its own icon.",
+        assessmentUnavailableCaption: "This version of macOS does not have the menu bar concealment facility Vorssaint uses. Your menu bar was left unchanged."
     )
 
     static let ptBR = MenuBarHidingStrings(
@@ -117,7 +129,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Oculta os ícones imediatamente, sem esperar que você clique na seta.",
         separatorAccessibilityLabel: "Separador da seção da barra de menus. Mantenha Command pressionado e arraste para posicioná-lo.",
         unavailableTitle: "Ocultação na barra de menus indisponível",
-        unavailableCaption: "Esta versão do macOS não permite que o Vorssaint redimensione itens da barra de menus, então os ícones não podem ser recolhidos. Sua barra de menus não foi alterada."
+        unavailableCaption: "Esta versão do macOS não permite que o Vorssaint redimensione itens da barra de menus, então os ícones não podem ser recolhidos. Sua barra de menus não foi alterada.",
+        assessmentCaption: "Nesta versão do macOS, a ocultação funciona por app: escolha os apps cujos ícones da barra de menus devem ser ocultados. Não há separador para arrastar.",
+        appPickerTitle: "Apps para ocultar",
+        appPickerCaption: "Todos os outros apps em execução continuam visíveis. Apps novos entram na lista permitida automaticamente.",
+        applicationsFolderCaption: "O Vorssaint precisa ser executado a partir de /Applications para isso funcionar. Uma cópia executada de Downloads ou de uma pasta de compilação ocultará o próprio ícone.",
+        assessmentUnavailableCaption: "Esta versão do macOS não tem o recurso de ocultação da barra de menus que o Vorssaint usa. Sua barra de menus não foi alterada."
     )
 
     static let tr = MenuBarHidingStrings(
@@ -147,7 +164,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Ok simgesine tıklamanızı beklemeden simgeleri hemen gizler.",
         separatorAccessibilityLabel: "Menü çubuğu bölüm ayırıcısı. Yerleştirmek için Command tuşunu basılı tutup sürükleyin.",
         unavailableTitle: "Menü çubuğunu gizleme kullanılamıyor",
-        unavailableCaption: "Bu macOS sürümü Vorssaint’in menü çubuğu ögelerini yeniden boyutlandırmasına izin vermediği için simgeler daraltılamıyor. Menü çubuğunuz değiştirilmedi."
+        unavailableCaption: "Bu macOS sürümü Vorssaint’in menü çubuğu ögelerini yeniden boyutlandırmasına izin vermediği için simgeler daraltılamıyor. Menü çubuğunuz değiştirilmedi.",
+        assessmentCaption: "Bu macOS sürümünde gizleme uygulama bazındadır: menü çubuğu simgeleri gizlenecek uygulamaları seçin. Sürüklenecek bir ayırıcı yoktur.",
+        appPickerTitle: "Gizlenecek uygulamalar",
+        appPickerCaption: "Çalışan diğer tüm uygulamalar görünür kalır. Yeni uygulamalar izin listesine otomatik olarak eklenir.",
+        applicationsFolderCaption: "Bunun çalışması için Vorssaint /Applications klasöründen çalışmalıdır. İndirilenler veya bir derleme klasöründen çalıştırılan kopya kendi simgesini gizler.",
+        assessmentUnavailableCaption: "Bu macOS sürümünde Vorssaint’in kullandığı menü çubuğu gizleme özelliği yok. Menü çubuğunuz değiştirilmedi."
     )
 
     static let ru = MenuBarHidingStrings(
@@ -177,7 +199,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Скрывает значки сразу, не дожидаясь нажатия на стрелку.",
         separatorAccessibilityLabel: "Разделитель раздела строки меню. Удерживайте Command и перетащите, чтобы разместить его.",
         unavailableTitle: "Скрытие строки меню недоступно",
-        unavailableCaption: "Эта версия macOS не позволяет Vorssaint изменять размер элементов строки меню, поэтому значки нельзя свернуть. Строка меню осталась без изменений."
+        unavailableCaption: "Эта версия macOS не позволяет Vorssaint изменять размер элементов строки меню, поэтому значки нельзя свернуть. Строка меню осталась без изменений.",
+        assessmentCaption: "В этой версии macOS скрытие работает по приложениям: выберите приложения, значки которых нужно скрыть. Разделителя для перетаскивания нет.",
+        appPickerTitle: "Приложения для скрытия",
+        appPickerCaption: "Все остальные запущенные приложения остаются видимыми. Новые приложения автоматически добавляются в список разрешённых.",
+        applicationsFolderCaption: "Чтобы это работало, Vorssaint должен запускаться из /Applications. Копия, запущенная из Загрузок или папки сборки, скроет собственный значок.",
+        assessmentUnavailableCaption: "В этой версии macOS нет средства скрытия строки меню, которое использует Vorssaint. Строка меню осталась без изменений."
     )
 
     static let es = MenuBarHidingStrings(
@@ -207,7 +234,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Oculta los iconos de inmediato en lugar de esperar a que pulses la flecha.",
         separatorAccessibilityLabel: "Separador de la sección de la barra de menús. Mantén Command y arrástralo para colocarlo.",
         unavailableTitle: "La ocultación en la barra de menús no está disponible",
-        unavailableCaption: "Esta versión de macOS no permite que Vorssaint cambie el tamaño de los elementos de la barra de menús, así que los iconos no se pueden contraer. La barra de menús no se ha modificado."
+        unavailableCaption: "Esta versión de macOS no permite que Vorssaint cambie el tamaño de los elementos de la barra de menús, así que los iconos no se pueden contraer. La barra de menús no se ha modificado.",
+        assessmentCaption: "En esta versión de macOS, la ocultación funciona por app: elige las apps cuyos iconos de la barra de menús quieres ocultar. No hay ningún separador que arrastrar.",
+        appPickerTitle: "Apps que ocultar",
+        appPickerCaption: "Todas las demás apps en ejecución siguen visibles. Las apps nuevas se añaden a la lista permitida automáticamente.",
+        applicationsFolderCaption: "Vorssaint debe ejecutarse desde /Applications para que esto funcione. Una copia ejecutada desde Descargas o desde una carpeta de compilación ocultará su propio icono.",
+        assessmentUnavailableCaption: "Esta versión de macOS no tiene el recurso de ocultación de la barra de menús que usa Vorssaint. La barra de menús no se ha modificado."
     )
 
     static let sk = MenuBarHidingStrings(
@@ -237,7 +269,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Skryje ikony okamžite namiesto čakania na kliknutie na šípku.",
         separatorAccessibilityLabel: "Oddeľovač časti panela ponúk. Podržte Command a presuňte ho na miesto.",
         unavailableTitle: "Skrývanie v paneli ponúk nie je dostupné",
-        unavailableCaption: "Táto verzia macOS neumožňuje aplikácii Vorssaint meniť veľkosť položiek panela ponúk, preto sa ikony nedajú zbaliť. Panel ponúk zostal nezmenený."
+        unavailableCaption: "Táto verzia macOS neumožňuje aplikácii Vorssaint meniť veľkosť položiek panela ponúk, preto sa ikony nedajú zbaliť. Panel ponúk zostal nezmenený.",
+        assessmentCaption: "V tejto verzii macOS funguje skrývanie podľa aplikácií: vyberte aplikácie, ktorých ikony panela ponúk sa majú skryť. Nie je tu žiadny oddeľovač na presunutie.",
+        appPickerTitle: "Aplikácie na skrytie",
+        appPickerCaption: "Všetky ostatné spustené aplikácie zostávajú viditeľné. Nové aplikácie sa automaticky pridajú do zoznamu povolených.",
+        applicationsFolderCaption: "Aby to fungovalo, Vorssaint musí bežať z /Applications. Kópia spustená zo Stiahnutých súborov alebo z priečinka zostavenia skryje vlastnú ikonu.",
+        assessmentUnavailableCaption: "Táto verzia macOS nemá funkciu skrývania panela ponúk, ktorú Vorssaint používa. Panel ponúk zostal nezmenený."
     )
 
     static let de = MenuBarHidingStrings(
@@ -267,7 +304,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Blendet die Symbole sofort aus, statt auf einen Klick auf den Pfeil zu warten.",
         separatorAccessibilityLabel: "Trenner des Menüleistenbereichs. Halte die Befehlstaste gedrückt und ziehe ihn an seinen Platz.",
         unavailableTitle: "Ausblenden der Menüleiste ist nicht verfügbar",
-        unavailableCaption: "Diese macOS-Version erlaubt Vorssaint nicht, Elemente der Menüleiste zu vergrößern, daher lassen sich die Symbole nicht einklappen. Deine Menüleiste blieb unverändert."
+        unavailableCaption: "Diese macOS-Version erlaubt Vorssaint nicht, Elemente der Menüleiste zu vergrößern, daher lassen sich die Symbole nicht einklappen. Deine Menüleiste blieb unverändert.",
+        assessmentCaption: "Unter dieser macOS-Version wird pro App ausgeblendet: Wähle die Apps, deren Menüleisten-Symbole verschwinden sollen. Es gibt keinen Separator zum Ziehen.",
+        appPickerTitle: "Apps zum Ausblenden",
+        appPickerCaption: "Alle anderen laufenden Apps bleiben sichtbar. Neue Apps werden automatisch zur erlaubten Liste hinzugefügt.",
+        applicationsFolderCaption: "Damit das funktioniert, muss Vorssaint aus /Applications laufen. Eine Kopie aus „Downloads“ oder einem Build-Ordner blendet das eigene Symbol aus.",
+        assessmentUnavailableCaption: "Diese macOS-Version hat nicht die Funktion zum Ausblenden der Menüleiste, die Vorssaint verwendet. Deine Menüleiste blieb unverändert."
     )
 
     static let fr = MenuBarHidingStrings(
@@ -297,7 +339,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Masque les icônes immédiatement au lieu d’attendre un clic sur la flèche.",
         separatorAccessibilityLabel: "Séparateur de section de la barre des menus. Maintenez Commande et faites-le glisser pour le placer.",
         unavailableTitle: "Le masquage dans la barre des menus est indisponible",
-        unavailableCaption: "Cette version de macOS ne permet pas à Vorssaint de redimensionner les éléments de la barre des menus, donc les icônes ne peuvent pas être repliées. Votre barre des menus n’a pas été modifiée."
+        unavailableCaption: "Cette version de macOS ne permet pas à Vorssaint de redimensionner les éléments de la barre des menus, donc les icônes ne peuvent pas être repliées. Votre barre des menus n’a pas été modifiée.",
+        assessmentCaption: "Avec cette version de macOS, le masquage se fait par app. Choisissez les apps dont les icônes de la barre des menus doivent être masquées. Il n’y a aucun séparateur à faire glisser.",
+        appPickerTitle: "Apps à masquer",
+        appPickerCaption: "Toutes les autres apps en cours d’exécution restent visibles. Les nouvelles apps sont ajoutées automatiquement à la liste autorisée.",
+        applicationsFolderCaption: "Vorssaint doit être exécuté depuis /Applications pour que cela fonctionne. Une copie lancée depuis Téléchargements ou un dossier de compilation masquera sa propre icône.",
+        assessmentUnavailableCaption: "Cette version de macOS ne dispose pas de la fonction de masquage de la barre des menus utilisée par Vorssaint. Votre barre des menus n’a pas été modifiée."
     )
 
     static let it = MenuBarHidingStrings(
@@ -327,7 +374,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Nasconde subito le icone senza attendere un clic sulla freccia.",
         separatorAccessibilityLabel: "Separatore della sezione della barra dei menu. Tieni premuto Command e trascinalo per posizionarlo.",
         unavailableTitle: "La scomparsa nella barra dei menu non è disponibile",
-        unavailableCaption: "Questa versione di macOS non consente a Vorssaint di ridimensionare gli elementi della barra dei menu, quindi le icone non possono essere compresse. La barra dei menu è rimasta invariata."
+        unavailableCaption: "Questa versione di macOS non consente a Vorssaint di ridimensionare gli elementi della barra dei menu, quindi le icone non possono essere compresse. La barra dei menu è rimasta invariata.",
+        assessmentCaption: "In questa versione di macOS la dissimulazione funziona per app: scegli le app le cui icone della barra dei menu devono essere nascoste. Non c’è alcun separatore da trascinare.",
+        appPickerTitle: "App da nascondere",
+        appPickerCaption: "Tutte le altre app in esecuzione restano visibili. Le nuove app vengono aggiunte automaticamente all’elenco consentito.",
+        applicationsFolderCaption: "Perché funzioni, Vorssaint deve essere eseguito da /Applications. Una copia avviata da Download o da una cartella di compilazione nasconderà la propria icona.",
+        assessmentUnavailableCaption: "Questa versione di macOS non dispone della funzione di occultamento della barra dei menu usata da Vorssaint. La barra dei menu è rimasta invariata."
     )
 
     static let ja = MenuBarHidingStrings(
@@ -357,7 +409,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "矢印をクリックするのを待たずに、すぐにアイコンを隠します。",
         separatorAccessibilityLabel: "メニューバーの区画の区切り。Command キーを押したままドラッグして配置します。",
         unavailableTitle: "メニューバーの非表示は利用できません",
-        unavailableCaption: "このバージョンの macOS では Vorssaint がメニューバーの項目のサイズを変更できないため、アイコンを折りたためません。メニューバーは変更されていません。"
+        unavailableCaption: "このバージョンの macOS では Vorssaint がメニューバーの項目のサイズを変更できないため、アイコンを折りたためません。メニューバーは変更されていません。",
+        assessmentCaption: "このバージョンの macOS では、アプリ単位で非表示になります。メニューバーのアイコンを隠すアプリを選択してください。ドラッグするセパレーターはありません。",
+        appPickerTitle: "非表示にするアプリ",
+        appPickerCaption: "実行中の他のアプリはすべて表示されたままです。新しいアプリは許可リストに自動的に追加されます。",
+        applicationsFolderCaption: "この機能を使うには、Vorssaint を /Applications から実行する必要があります。ダウンロードやビルドフォルダーから実行したコピーは、自身のアイコンを隠してしまいます。",
+        assessmentUnavailableCaption: "このバージョンの macOS には、Vorssaint が使用するメニューバーの非表示機能がありません。メニューバーは変更されていません。"
     )
 
     static let ko = MenuBarHidingStrings(
@@ -387,7 +444,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "화살표를 클릭할 때까지 기다리지 않고 아이콘을 바로 숨깁니다.",
         separatorAccessibilityLabel: "메뉴 막대 구역 구분선. Command 키를 누른 채 드래그하여 배치하십시오.",
         unavailableTitle: "메뉴 막대 숨기기를 사용할 수 없음",
-        unavailableCaption: "이 macOS 버전에서는 Vorssaint가 메뉴 막대 항목의 크기를 조절할 수 없어 아이콘을 접을 수 없습니다. 메뉴 막대는 변경되지 않았습니다."
+        unavailableCaption: "이 macOS 버전에서는 Vorssaint가 메뉴 막대 항목의 크기를 조절할 수 없어 아이콘을 접을 수 없습니다. 메뉴 막대는 변경되지 않았습니다.",
+        assessmentCaption: "이 macOS 버전에서는 앱별로 가립니다. 메뉴 막대 아이콘을 숨길 앱을 선택하세요. 끌어서 놓을 구분선은 없습니다.",
+        appPickerTitle: "숨길 앱",
+        appPickerCaption: "실행 중인 다른 모든 앱은 계속 표시됩니다. 새 앱은 허용 목록에 자동으로 추가됩니다.",
+        applicationsFolderCaption: "이 기능이 작동하려면 Vorssaint가 /Applications에서 실행되어야 합니다. 다운로드나 빌드 폴더에서 실행한 복사본은 자체 아이콘을 숨기게 됩니다.",
+        assessmentUnavailableCaption: "이 macOS 버전에는 Vorssaint가 사용하는 메뉴 막대 숨기기 기능이 없습니다. 메뉴 막대는 변경되지 않았습니다."
     )
 
     static let zhHans = MenuBarHidingStrings(
@@ -417,7 +479,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "无需等待点击箭头，立即隐藏图标。",
         separatorAccessibilityLabel: "菜单栏区域分隔线。按住 Command 拖动以放置。",
         unavailableTitle: "菜单栏隐藏不可用",
-        unavailableCaption: "此版本的 macOS 不允许 Vorssaint 调整菜单栏项目的大小，因此无法折叠图标。您的菜单栏未被更改。"
+        unavailableCaption: "此版本的 macOS 不允许 Vorssaint 调整菜单栏项目的大小，因此无法折叠图标。您的菜单栏未被更改。",
+        assessmentCaption: "在此版本的 macOS 上，隐藏按应用进行：请选择要隐藏其菜单栏图标的应用。没有可拖动的分隔线。",
+        appPickerTitle: "要隐藏的应用",
+        appPickerCaption: "其他所有正在运行的应用仍会显示。新应用会自动加入允许列表。",
+        applicationsFolderCaption: "此功能要求 Vorssaint 从 /Applications 运行。从“下载”或构建文件夹运行的副本会隐藏自己的图标。",
+        assessmentUnavailableCaption: "此版本的 macOS 没有 Vorssaint 使用的菜单栏隐藏功能。您的菜单栏未被更改。"
     )
 
     static let zhTW = MenuBarHidingStrings(
@@ -447,7 +514,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "不必等待點按箭頭，立即隱藏圖示。",
         separatorAccessibilityLabel: "選單列區域分隔線。按住 Command 拖曳以放置。",
         unavailableTitle: "選單列隱藏無法使用",
-        unavailableCaption: "此版本的 macOS 不允許 Vorssaint 調整選單列項目的大小，因此無法摺疊圖示。您的選單列未被變更。"
+        unavailableCaption: "此版本的 macOS 不允許 Vorssaint 調整選單列項目的大小，因此無法摺疊圖示。您的選單列未被變更。",
+        assessmentCaption: "在此版本的 macOS 上，隱藏是按應用程式進行：請選擇要隱藏其選單列圖示的應用程式。沒有可拖曳的分隔線。",
+        appPickerTitle: "要隱藏的應用程式",
+        appPickerCaption: "其他所有執行中的應用程式仍會顯示。新應用程式會自動加入允許清單。",
+        applicationsFolderCaption: "此功能要求 Vorssaint 從 /Applications 執行。從「下載」或建置資料夾執行的副本會隱藏自己的圖示。",
+        assessmentUnavailableCaption: "此版本的 macOS 沒有 Vorssaint 使用的選單列隱藏功能。您的選單列未被變更。"
     )
 
     static let zhHK = MenuBarHidingStrings(
@@ -477,7 +549,12 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "不必等待點按箭嘴，立即隱藏圖示。",
         separatorAccessibilityLabel: "選單列區域分隔線。按住 Command 拖曳以放置。",
         unavailableTitle: "選單列隱藏無法使用",
-        unavailableCaption: "此版本的 macOS 不允許 Vorssaint 調整選單列項目的大小，因此無法摺疊圖示。您的選單列未被變更。"
+        unavailableCaption: "此版本的 macOS 不允許 Vorssaint 調整選單列項目的大小，因此無法摺疊圖示。您的選單列未被變更。",
+        assessmentCaption: "在此版本的 macOS 上，隱藏是按應用程式進行：請選擇要隱藏其選單列圖示的應用程式。沒有可拖曳的分隔線。",
+        appPickerTitle: "要隱藏的應用程式",
+        appPickerCaption: "其他所有執行中的應用程式仍會顯示。新應用程式會自動加入允許清單。",
+        applicationsFolderCaption: "此功能要求 Vorssaint 從 /Applications 執行。從「下載」或建置資料夾執行的副本會隱藏自己的圖示。",
+        assessmentUnavailableCaption: "此版本的 macOS 沒有 Vorssaint 使用的選單列隱藏功能。您的選單列未被變更。"
     )
 
     static let uk = MenuBarHidingStrings(
@@ -507,6 +584,11 @@ extension MenuBarHidingStrings {
         startCollapsedCaption: "Приховує значки відразу, не чекаючи натискання на стрілку.",
         separatorAccessibilityLabel: "Розділювач розділу рядка меню. Утримуйте Command і перетягніть, щоб розмістити його.",
         unavailableTitle: "Приховування в рядку меню недоступне",
-        unavailableCaption: "Ця версія macOS не дозволяє Vorssaint змінювати розмір елементів рядка меню, тому значки не можна згорнути. Рядок меню залишився без змін."
+        unavailableCaption: "Ця версія macOS не дозволяє Vorssaint змінювати розмір елементів рядка меню, тому значки не можна згорнути. Рядок меню залишився без змін.",
+        assessmentCaption: "У цій версії macOS приховування працює за програмами: виберіть програми, чиї значки в рядку меню потрібно приховати. Розділювача для перетягування немає.",
+        appPickerTitle: "Програми для приховування",
+        appPickerCaption: "Усі інші запущені програми залишаються видимими. Нові програми автоматично додаються до списку дозволених.",
+        applicationsFolderCaption: "Щоб це працювало, Vorssaint має запускатися з /Applications. Копія, запущена зі «Завантажень» або теки збірки, приховає власний значок.",
+        assessmentUnavailableCaption: "У цій версії macOS немає засобу приховування рядка меню, який використовує Vorssaint. Рядок меню залишився без змін."
     )
 }

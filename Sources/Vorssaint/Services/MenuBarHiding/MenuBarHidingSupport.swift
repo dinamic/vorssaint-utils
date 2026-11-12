@@ -44,6 +44,71 @@ enum MenuBarHidingCollapseResult: Equatable {
     case unavailable
 }
 
+/// Which mechanism a running macOS offers. The width engine is the pre-27
+/// fallback; macOS 27 rebuilt the menu bar and no longer reflows around an
+/// inflated status item, so it gets the assessment-mode engine instead.
+enum MenuBarHidingMechanism: Equatable {
+    case width
+    case assessment
+}
+
+/// Whether the assessment-mode facility can be used at all. Kept separate from
+/// the mechanism choice so the interface can say *why* hiding is unavailable:
+/// an old macOS and a missing private framework have different remedies.
+enum MenuBarHidingAssessmentAvailability: Equatable {
+    case available
+    case unsupportedOS
+    case frameworkMissing
+}
+
+/// The decisions behind the macOS 27 assessment-mode engine. The runtime that
+/// talks to `MenuBarClientCore` is deliberately not part of this: everything
+/// here is a value in, a value out, so the harness can walk every branch
+/// without a private framework or a live menu bar.
+enum MenuBarHidingAssessment {
+    /// MenuBarAgent numbers its own items 0 through 8 on macOS 27. Keeping all
+    /// of them allowed leaves the clock, Wi-Fi and battery where they are.
+    static let systemItemIndices = 0...8
+
+    static func availability(osMajorVersion: Int, classesLoaded: Bool) -> MenuBarHidingAssessmentAvailability {
+        guard osMajorVersion >= 27 else { return .unsupportedOS }
+        return classesLoaded ? .available : .frameworkMissing
+    }
+
+    /// macOS 27 always gets the assessment engine, even when the framework is
+    /// missing: the width engine is known not to work there, and the assessment
+    /// engine reports `.unavailable` instead of pretending a collapse happened.
+    static func mechanism(osMajorVersion: Int, classesLoaded: Bool) -> MenuBarHidingMechanism {
+        osMajorVersion >= 27 ? .assessment : .width
+    }
+
+    /// Concealment is expressed as an allowlist, so hiding an app means leaving
+    /// it out of the list. Apps without a bundle identifier cannot be named and
+    /// are therefore never allowed; duplicates collapse.
+    static func allowlist(running: [String?], hidden: Set<String>) -> Set<String> {
+        Set(running.compactMap { $0 }).subtracting(hidden)
+    }
+
+    /// The allowlist is a snapshot of what was running when the assertion went
+    /// up. An app that launched afterwards is missing from it and would be
+    /// concealed by accident, so the assertion has to be re-applied. Apps the
+    /// user asked to hide are meant to be missing and do not count.
+    static func needsReapply(running: Set<String>, allowed: Set<String>, hidden: Set<String>) -> Bool {
+        !running.subtracting(hidden).subtracting(allowed).isEmpty
+    }
+
+    /// A successful activation is the only thing that makes the bar collapsed;
+    /// a refused or timed-out one is a real unavailable state, not a silent
+    /// no-op. Revealing always returns to expanded.
+    static func stateAfterActivation(succeeded: Bool) -> MenuBarHidingState {
+        succeeded ? .collapsed : .unavailable
+    }
+
+    static func stateAfterReveal() -> MenuBarHidingState {
+        .expanded
+    }
+}
+
 /// The widths and comparisons the width mechanism is built from.
 enum MenuBarHidingLayout {
     /// Width the boundary separator keeps while the bar is expanded: wide
