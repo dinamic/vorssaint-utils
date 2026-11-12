@@ -259,8 +259,8 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
         reapplyWorkItem = nil
         runningAppsObservation?.invalidate()
         runningAppsObservation = nil
-        if let terminateObserver {
-            NotificationCenter.default.removeObserver(terminateObserver)
+        if let observer = terminateObserver {
+            NotificationCenter.default.removeObserver(observer)
             terminateObserver = nil
         }
         token?.invalidate()
