@@ -32,8 +32,11 @@ struct MenuBarHidingSettings: View {
     @AppStorage(DefaultsKey.menuBarHidingHoverToExpand) private var hoverToExpand = false
     @AppStorage(DefaultsKey.menuBarHidingAlwaysHiddenSection) private var alwaysHiddenSection = false
     @AppStorage(DefaultsKey.menuBarHidingHideSeparators) private var hideSeparators = false
-    @AppStorage(DefaultsKey.menuBarHidingHiddenBundleIDs) private var hiddenBundleIDs: [String] = []
 
+    /// `@AppStorage` has no array form, so the selection is read and written
+    /// through `UserDefaults` directly. Every write posts the defaults
+    /// notification the service already listens to.
+    @State private var hiddenBundleIDs: [String] = []
     @State private var runningApps: [NSRunningApplication] = []
 
     private var strings: MenuBarHidingStrings {
@@ -187,18 +190,22 @@ struct MenuBarHidingSettings: View {
         Binding(
             get: { hiddenBundleIDs.contains(bundleID) },
             set: { hidden in
+                var ids = Set(hiddenBundleIDs)
                 if hidden {
-                    if !hiddenBundleIDs.contains(bundleID) {
-                        hiddenBundleIDs.append(bundleID)
-                    }
+                    ids.insert(bundleID)
                 } else {
-                    hiddenBundleIDs.removeAll { $0 == bundleID }
+                    ids.remove(bundleID)
                 }
+                let sorted = ids.sorted()
+                hiddenBundleIDs = sorted
+                UserDefaults.standard.set(sorted, forKey: DefaultsKey.menuBarHidingHiddenBundleIDs)
             }
         )
     }
 
     private func refreshRunningApps() {
         runningApps = NSWorkspace.shared.runningApplications
+        hiddenBundleIDs = UserDefaults.standard
+            .stringArray(forKey: DefaultsKey.menuBarHidingHiddenBundleIDs) ?? []
     }
 }
