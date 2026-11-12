@@ -312,7 +312,7 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
     }
 
     @objc private func openSettings() {
-        SettingsRouter.shared.request(FeatureSettingsDestination(.monitor))
+        SettingsRouter.shared.request(FeatureSettingsDestination(.monitor, sectionAnchor: .menuBarHiding))
         (NSApp.delegate as? AppDelegate)?.openSettingsWindow()
     }
 
