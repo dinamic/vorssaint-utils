@@ -66,6 +66,12 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
     /// delegate. Everything after that arrives through preference changes.
     func start() {
         guard defaultsObserver == nil else { return }
+        // The card has to describe the right model before the feature is even
+        // switched on, so the mechanism is chosen here as well as at install.
+        mechanism = MenuBarHidingAssessment.mechanism(
+            osMajorVersion: ProcessInfo.processInfo.operatingSystemVersion.majorVersion,
+            classesLoaded: MenuBarHidingAssessmentRuntime.shared.isAvailable
+        )
         defaultsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
             object: nil,
@@ -213,7 +219,6 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
         }
 
         toggleItem = toggle
-        separatorItem = separator
         let log: (String) -> Void = { message in
             Self.log.debug("\(message, privacy: .public)")
         }
@@ -225,15 +230,18 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
         let engine: MenuBarHidingEngine
         switch mechanism {
         case .assessment:
-            // macOS 27: conceal whole apps through the assessment-mode
-            // facility. The separator stays in the bar as a visual marker but
-            // is not the mechanism, and the Settings card says so.
+            // macOS 27 conceals whole apps; there is no boundary to place, so
+            // the separator would be a control that does nothing. The chevron
+            // stays as the toggle.
+            NSStatusBar.system.removeStatusItem(separator)
+            separatorItem = nil
             engine = AssessmentMenuBarHidingEngine(
                 items: self,
                 hiddenBundleIDs: Configuration().hiddenBundleIDs,
                 log: log
             )
         case .width:
+            separatorItem = separator
             engine = LengthMenuBarHidingEngine(items: self, log: log)
         }
         // A fail-open happens after the engine already reported a collapse, so
@@ -247,6 +255,15 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
     }
 
     private func syncAlwaysHiddenItem(enabled: Bool) {
+        // The always hidden section is a second positional boundary, which only
+        // the width engine has. On macOS 27 the item would be inert.
+        guard mechanism == .width else {
+            if let item = alwaysHiddenItem {
+                NSStatusBar.system.removeStatusItem(item)
+                alwaysHiddenItem = nil
+            }
+            return
+        }
         if enabled {
             guard alwaysHiddenItem == nil else { return }
             let item = NSStatusBar.system.statusItem(withLength: 0)
