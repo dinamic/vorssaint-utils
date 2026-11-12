@@ -143,7 +143,8 @@ enum MenuBarHidingTests {
         suite.expect(!MenuBarHidingHover.isPointerInMenuBar(pointer: CGPoint(x: 700, y: 895), screens: [fullscreen]),
                      "a hidden menu bar has no band to hover, so hovering must not expand")
 
-        suite.expect(!MenuBarHidingHover.isPointerInMenuBar(pointer: CGPoint(x: .nan, y: .nan), screens: [screen]),
+        suite.expect(!MenuBarHidingHover.isPointerInMenuBar(pointer: CGPoint(x: CGFloat.nan, y: CGFloat.nan),
+                                                            screens: [screen]),
                      "an unreadable pointer position never triggers an expansion")
         suite.expect(MenuBarHidingHover.dwellSeconds > 0,
                      "a passing pointer needs to rest before the bar expands")
