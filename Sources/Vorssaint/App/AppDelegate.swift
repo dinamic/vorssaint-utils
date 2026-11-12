@@ -156,6 +156,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         setUpPopover()
         bindManagers()
 
+        // Collapsing a section of the menu bar. Installs nothing unless the
+        // preference is on, and follows every later change by itself.
+        MenuBarHidingService.shared.start()
+
         // A marker from an earlier build may name a hotkey id this build no
         // longer owns; give it back before any feature decides what to hold,
         // except the ids the switcher is about to take over again, which stay

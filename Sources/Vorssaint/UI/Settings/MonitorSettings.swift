@@ -56,6 +56,7 @@ struct MonitorSettings: View {
                     groupHeading(l10n.s.monitorMenuBarSection, symbol: "menubar.rectangle")
                     menuBarCard
                     menuBarStyleCard
+                    MenuBarHidingSettings()
                     groupHeading(l10n.s.monitorPanelSection, symbol: "macwindow")
                     panelCard
                     if AppFeature.fanControl.isAvailable {

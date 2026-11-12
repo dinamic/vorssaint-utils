@@ -37,6 +37,7 @@ struct MetricsTests {
                 SuperKeyTapContract.run(suite)
                 PointerScreenContract.run(suite)
             }),
+            ("menu-bar-hiding", { MenuBarHidingTests.run(suite) }),
             ("scroll-modifier", {
                 ScrollHorizontalModifierTests.run(suite)
                 ScrollZoomFocusTests.run(suite)
