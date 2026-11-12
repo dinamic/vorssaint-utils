@@ -52,15 +52,6 @@ enum MenuBarHidingMechanism: Equatable {
     case assessment
 }
 
-/// Whether the assessment-mode facility can be used at all. Kept separate from
-/// the mechanism choice so the interface can say *why* hiding is unavailable:
-/// an old macOS and a missing private framework have different remedies.
-enum MenuBarHidingAssessmentAvailability: Equatable {
-    case available
-    case unsupportedOS
-    case frameworkMissing
-}
-
 /// The decisions behind the macOS 27 assessment-mode engine. The runtime that
 /// talks to `MenuBarClientCore` is deliberately not part of this: everything
 /// here is a value in, a value out, so the harness can walk every branch
@@ -68,12 +59,12 @@ enum MenuBarHidingAssessmentAvailability: Equatable {
 enum MenuBarHidingAssessment {
     /// MenuBarAgent numbers its own items 0 through 8 on macOS 27. Keeping all
     /// of them allowed leaves the clock, Wi-Fi and battery where they are.
+    ///
+    /// The clock stays visible but is not clickable while an assertion is live:
+    /// MenuBarAgent ignores clicks on its own items. The reference
+    /// implementation drops and re-posts the click; this engine does not, so
+    /// the Settings card carries the limitation instead of leaving it silent.
     static let systemItemIndices = 0...8
-
-    static func availability(osMajorVersion: Int, classesLoaded: Bool) -> MenuBarHidingAssessmentAvailability {
-        guard osMajorVersion >= 27 else { return .unsupportedOS }
-        return classesLoaded ? .available : .frameworkMissing
-    }
 
     /// macOS 27 always gets the assessment engine, even when the framework is
     /// missing: the width engine is known not to work there, and the assessment

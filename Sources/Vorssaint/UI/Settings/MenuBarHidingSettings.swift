@@ -101,6 +101,17 @@ struct MenuBarHidingSettings: View {
                         }
                     }
                     assessmentAppPicker
+
+                    // macOS blocks clicks on its own items while an assertion
+                    // is held. The clock therefore stays visible but cannot
+                    // open Notification Centre; saying so here is the
+                    // documented limitation rather than a silent dead corner.
+                    Text(strings.assessmentClockCaption)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 6)
                 }
 
                 SettingsRow(symbol: "chevron.down",

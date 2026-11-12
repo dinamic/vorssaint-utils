@@ -478,6 +478,8 @@ if (( TEST )); then
         Sources/Vorssaint/Core/SettingsNavigationStrings.swift
         Sources/Vorssaint/App/MenuBarSpacingSupport.swift
         Sources/Vorssaint/Services/MenuBarHiding/MenuBarHidingSupport.swift
+        Sources/Vorssaint/Services/MenuBarHiding/MenuBarHidingEngine.swift
+        Sources/Vorssaint/Services/MenuBarHiding/MenuBarHidingAssessmentEngine.swift
         Sources/Vorssaint/Core/MenuBarHidingStrings.swift
         Sources/Vorssaint/App/MenuBarAllowanceSupport.swift
         Sources/Vorssaint/App/ReopenRequestSupport.swift

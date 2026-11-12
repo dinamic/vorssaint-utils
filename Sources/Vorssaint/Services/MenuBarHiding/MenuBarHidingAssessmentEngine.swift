@@ -4,6 +4,24 @@
 import AppKit
 import Foundation
 
+/// Something whose lifetime keeps a concealment assertion up. Dropping the
+/// last reference would also work, but an explicit invalidate is deterministic:
+/// the icons come back on the same runloop turn the user asked for.
+protocol MenuBarHidingConcealment: AnyObject {
+    func invalidate()
+}
+
+/// The assessment-mode facility as the engine sees it. A protocol so the
+/// production decision path can be driven in the harness with a fake that
+/// records allowlists and answers on command, instead of only testing the pure
+/// set algebra next to it.
+protocol MenuBarHidingAssessmentConcealing: AnyObject {
+    var isAvailable: Bool { get }
+    func conceal(allowing allowed: Set<String>,
+                 completion: @escaping (Result<any MenuBarHidingConcealment,
+                                               MenuBarHidingAssessmentRuntime.Failure>) -> Void)
+}
+
 /// The macOS 27 concealment facility, loaded defensively.
 ///
 /// macOS 27 ships an allowlist-based menu bar concealment behind the private
@@ -16,7 +34,7 @@ import Foundation
 /// and the whole thing reports unavailable rather than trapping if a future
 /// build moves it. The approach is adapted from Ice, Thaw and justhide (all
 /// GPLv3, as is Vorssaint); the implementation here is our own.
-final class MenuBarHidingAssessmentRuntime {
+final class MenuBarHidingAssessmentRuntime: MenuBarHidingAssessmentConcealing {
     static let shared = MenuBarHidingAssessmentRuntime()
 
     private static let frameworkPath =
@@ -54,20 +72,17 @@ final class MenuBarHidingAssessmentRuntime {
 
     var isAvailable: Bool { classes != nil }
 
-    var availability: MenuBarHidingAssessmentAvailability {
-        MenuBarHidingAssessment.availability(
-            osMajorVersion: ProcessInfo.processInfo.operatingSystemVersion.majorVersion,
-            classesLoaded: isAvailable
-        )
-    }
-
     /// A live assertion. Holding it keeps the concealment up; dropping it
     /// reveals the icons again.
-    final class Token {
+    final class Token: MenuBarHidingConcealment {
         private let assertion: AnyObject
 
         fileprivate init(assertion: AnyObject) {
             self.assertion = assertion
+        }
+
+        deinit {
+            invalidate()
         }
 
         func invalidate() {
@@ -92,10 +107,27 @@ final class MenuBarHidingAssessmentRuntime {
         }
     }
 
+    /// Resolves the framework callback against the main-queue timeout exactly
+    /// once. Both arrive from different queues, so the flag needs a lock: a
+    /// plain `Bool` raced, and the loser could activate a second token after
+    /// the winner had already been handed out.
+    private final class SettlementGate {
+        private let lock = NSLock()
+        private var settled = false
+
+        func claim() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            guard !settled else { return false }
+            settled = true
+            return true
+        }
+    }
+
     /// Activates an assertion permitting exactly `allowed`, concealing the rest.
     /// The completion is delivered on the main queue.
     func conceal(allowing allowed: Set<String>,
-                 completion: @escaping (Result<Token, Failure>) -> Void) {
+                 completion: @escaping (Result<any MenuBarHidingConcealment, Failure>) -> Void) {
         guard let classes else {
             completion(.failure(.unavailable))
             return
@@ -114,13 +146,12 @@ final class MenuBarHidingAssessmentRuntime {
             return
         }
 
-        var settled = false
-        let settle: (Result<Token, Failure>) -> Void = { result in
+        let gate = SettlementGate()
+        let settle: (Result<any MenuBarHidingConcealment, Failure>) -> Void = { result in
             DispatchQueue.main.async { completion(result) }
         }
         let handler: @convention(block) (Any?) -> Void = { error in
-            guard !settled else { return }
-            settled = true
+            guard gate.claim() else { return }
             if let error {
                 _ = assertion.perform(Self.invalidateSelector)
                 settle(.failure(.rejected(String(describing: error))))
@@ -131,8 +162,7 @@ final class MenuBarHidingAssessmentRuntime {
         _ = assertion.perform(Self.activateSelector, with: configuration, with: handler)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.activationTimeout) {
-            guard !settled else { return }
-            settled = true
+            guard gate.claim() else { return }
             _ = assertion.perform(Self.invalidateSelector)
             settle(.failure(.timedOut))
         }
@@ -152,23 +182,49 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
     private(set) var state: MenuBarHidingState
 
     private weak var items: MenuBarHidingItemProvider?
-    private let runtime: MenuBarHidingAssessmentRuntime
+    private let runtime: any MenuBarHidingAssessmentConcealing
+    /// The running set the production path reads. Injected so the harness can
+    /// drive `runningAppsChanged()` with a known before/after set.
+    private let runningBundleIDs: () -> Set<String>
+    /// Zero in tests, where a runloop is not available to fire the coalescing
+    /// timer; the production default stays below perceptibility.
+    private let reapplyDelay: TimeInterval
     private let log: (String) -> Void
 
     private var hiddenBundleIDs: Set<String>
-    private var token: MenuBarHidingAssessmentRuntime.Token?
+    private var token: (any MenuBarHidingConcealment)?
+    /// The allowlist that went into the live token. `needsReapply` has to
+    /// compare against this, not against a freshly computed allowlist: the
+    /// freshly computed one subtracts the same hidden apps, which makes the
+    /// predicate tautologically false and silently drops every launch.
+    private(set) var appliedAllowlist: Set<String> = []
     private var runningAppsObservation: NSKeyValueObservation?
     private var reapplyWorkItem: DispatchWorkItem?
     private var terminateObserver: NSObjectProtocol?
-    private var isActivating = false
+    /// Identifies the activation in flight. `nil` when none is, including after
+    /// a reveal or a teardown that cancelled one.
+    private var activeActivation: Int?
+    /// A re-apply asked for while an activation was in flight. Coalesced: one
+    /// pending flag, not a queue, because only the newest running set matters.
+    private var pendingReapply = false
+    /// Bumped by every activation, reveal and teardown. A completion whose
+    /// generation is stale invalidates whatever it brought back instead of
+    /// installing it over the user's decision.
+    private var generation = 0
 
     init(items: MenuBarHidingItemProvider,
          hiddenBundleIDs: Set<String>,
-         runtime: MenuBarHidingAssessmentRuntime = .shared,
+         runtime: any MenuBarHidingAssessmentConcealing = MenuBarHidingAssessmentRuntime.shared,
+         runningBundleIDs: @escaping () -> Set<String> = {
+             Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+         },
+         reapplyDelay: TimeInterval = 0.4,
          log: @escaping (String) -> Void = { NSLog("MenuBarHiding: %@", $0) }) {
         self.items = items
         self.hiddenBundleIDs = hiddenBundleIDs
         self.runtime = runtime
+        self.runningBundleIDs = runningBundleIDs
+        self.reapplyDelay = reapplyDelay
         self.log = log
         self.state = runtime.isAvailable ? .expanded : .unavailable
 
@@ -201,11 +257,15 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
             return
         }
         guard !hiddenBundleIDs.isEmpty else {
+            // There is nothing to conceal yet. Say so where the caller can
+            // surface it, and leave the state alone: pretending to collapse
+            // hides the fact that a choice is missing.
             log("no apps are marked hidden; choose some in Settings first")
             completion(.unavailable)
+            stateDidChange?()
             return
         }
-        guard state != .collapsed, !isActivating else {
+        guard state != .collapsed, activeActivation == nil else {
             completion(state == .collapsed ? .collapsed : .unavailable)
             return
         }
@@ -225,10 +285,17 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
     }
 
     func expand() {
+        // Cancels an activation the user overtook. Its completion may still
+        // arrive; the generation check makes it invalidate the late token
+        // instead of installing it.
+        generation &+= 1
+        activeActivation = nil
+        pendingReapply = false
         reapplyWorkItem?.cancel()
         reapplyWorkItem = nil
         token?.invalidate()
         token = nil
+        appliedAllowlist = []
         state = MenuBarHidingAssessment.stateAfterReveal()
         stateDidChange?()
     }
@@ -255,6 +322,12 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
     var isArrangementValid: Bool { true }
 
     func stop() {
+        // Any assertion still in flight belongs to a feature that is now off.
+        // The generation bump makes its completion invalidate itself rather
+        // than leave icons concealed after teardown.
+        generation &+= 1
+        activeActivation = nil
+        pendingReapply = false
         reapplyWorkItem?.cancel()
         reapplyWorkItem = nil
         runningAppsObservation?.invalidate()
@@ -265,6 +338,7 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
         }
         token?.invalidate()
         token = nil
+        appliedAllowlist = []
         state = .expanded
     }
 
@@ -273,31 +347,55 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
     /// Puts a new assertion up before invalidating the old one: an app concealed
     /// on both sides of a change never flickers into view.
     private func applyAssertion(completion: @escaping (Result<Void, MenuBarHidingAssessmentRuntime.Failure>) -> Void) {
-        guard !isActivating else { return }
-        isActivating = true
-        let running = NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier)
-        let allowed = MenuBarHidingAssessment.allowlist(running: running, hidden: hiddenBundleIDs)
+        // The facility stalls MenuBarAgent while an assertion is applied, so
+        // overlapping activations are not allowed. The request is not dropped:
+        // it is remembered and re-run as soon as this one settles.
+        guard activeActivation == nil else {
+            pendingReapply = true
+            return
+        }
+        generation &+= 1
+        let activation = generation
+        activeActivation = activation
+        let running = runningBundleIDs()
+        let allowed = MenuBarHidingAssessment.allowlist(running: Array(running), hidden: hiddenBundleIDs)
         log("activating assertion: allowing \(allowed.count) apps, hiding \(hiddenBundleIDs.count)")
         runtime.conceal(allowing: allowed) { [weak self] result in
             guard let self else { return }
-            self.isActivating = false
+            if self.activeActivation == activation {
+                self.activeActivation = nil
+            }
+            // A completed activation the user already cancelled (reveal, stop,
+            // or a newer activation) must not become the live token.
+            guard activation == self.generation else {
+                if case let .success(lateToken) = result {
+                    lateToken.invalidate()
+                }
+                self.runPendingReapplyIfNeeded()
+                return
+            }
             switch result {
             case let .success(newToken):
                 let previous = self.token
                 self.token = newToken
                 previous?.invalidate()
+                self.appliedAllowlist = allowed
                 completion(.success(()))
             case let .failure(error):
                 completion(.failure(error))
             }
+            self.runPendingReapplyIfNeeded()
         }
     }
 
-    private func runningAppsChanged() {
+    /// The set `runningAppsChanged` reads. Internal so the harness can call the
+    /// same entry point KVO calls, rather than only re-testing the pure helper.
+    func runningAppsChanged() {
         guard state == .collapsed else { return }
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
-        let allowed = MenuBarHidingAssessment.allowlist(running: Array(running), hidden: hiddenBundleIDs)
-        guard MenuBarHidingAssessment.needsReapply(running: running, allowed: allowed, hidden: hiddenBundleIDs) else {
+        let running = runningBundleIDs()
+        guard MenuBarHidingAssessment.needsReapply(running: running,
+                                                   allowed: appliedAllowlist,
+                                                   hidden: hiddenBundleIDs) else {
             return
         }
         scheduleReapply()
@@ -316,6 +414,20 @@ final class AssessmentMenuBarHidingEngine: MenuBarHidingEngine {
             }
         }
         reapplyWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
+        if reapplyDelay <= 0 {
+            work.perform()
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + reapplyDelay, execute: work)
+        }
+    }
+
+    /// Runs a request that arrived while an activation was in flight, now that
+    /// the activation has settled. Only runs while the bar is still collapsed:
+    /// a reveal clears the flag before this can.
+    private func runPendingReapplyIfNeeded() {
+        guard pendingReapply else { return }
+        pendingReapply = false
+        guard state == .collapsed, activeActivation == nil else { return }
+        scheduleReapply()
     }
 }

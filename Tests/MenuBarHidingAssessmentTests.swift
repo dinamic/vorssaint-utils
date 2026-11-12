@@ -1,35 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Vorssaint
 
+import AppKit
 import Foundation
 
-/// The pure decisions behind the macOS 27 assessment-mode engine: which
-/// mechanism a macOS gets, whether the private facility is usable, how the
-/// allowlist is computed, when it has to be rebuilt, and what a successful or
-/// refused activation means for the published state. None of it loads the
-/// private framework or touches a status item.
+/// The decisions behind the macOS 27 assessment-mode engine, plus the engine's
+/// own production path driven through a fake facility: which mechanism a macOS
+/// gets, how the allowlist is computed, when a launch has to rebuild it, what
+/// the activation lifecycle does when it overlaps a launch, a reveal or a
+/// teardown, and what a successful or refused activation means for the
+/// published state. Nothing here touches the private framework or a status item.
 enum MenuBarHidingAssessmentTests {
     static func run(_ suite: TestSuite) {
-        availability(suite)
+        mechanism(suite)
         allowlist(suite)
         reapply(suite)
+        engineReapply(suite)
+        engineLifecycle(suite)
         transitions(suite)
     }
 
-    private static func availability(_ suite: TestSuite) {
-        suite.expect(MenuBarHidingAssessment.availability(osMajorVersion: 26, classesLoaded: true)
-                         == .unsupportedOS,
-                     "macOS 26 is below the assessment-mode facility")
-        suite.expect(MenuBarHidingAssessment.availability(osMajorVersion: 27, classesLoaded: false)
-                         == .frameworkMissing,
-                     "macOS 27 without MenuBarClientCore reports the framework as missing")
-        suite.expect(MenuBarHidingAssessment.availability(osMajorVersion: 27, classesLoaded: true)
-                         == .available,
-                     "macOS 27 with every class and selector present is available")
-        suite.expect(MenuBarHidingAssessment.availability(osMajorVersion: 28, classesLoaded: true)
-                         == .available,
-                     "a later macOS keeps the facility available")
-
+    private static func mechanism(_ suite: TestSuite) {
         suite.expect(MenuBarHidingAssessment.mechanism(osMajorVersion: 26, classesLoaded: true) == .width,
                      "the width engine is the pre-27 fallback")
         suite.expect(MenuBarHidingAssessment.mechanism(osMajorVersion: 27, classesLoaded: true) == .assessment,
@@ -71,6 +62,109 @@ enum MenuBarHidingAssessmentTests {
                      "a new visible app still triggers a re-apply when another app is hidden")
     }
 
+    /// Drives the method KVO calls, not just `needsReapply`. The production bug
+    /// was that the engine fed the freshly computed allowlist to the predicate,
+    /// which made it tautologically false even though the live token held a
+    /// stale snapshot.
+    private static func engineReapply(_ suite: TestSuite) {
+        let concealer = FakeConcealer()
+        var running: Set<String> = ["a", "hidden"]
+        let engine = makeEngine(hidden: ["hidden"], running: { running }, concealer: concealer)
+
+        var result: MenuBarHidingCollapseResult?
+        engine.collapse { result = $0 }
+        suite.expect(result == .collapsed, "the fake facility lets the engine collapse")
+        suite.expect(engine.appliedAllowlist == ["a"],
+                     "the engine remembers the allowlist that the live token was given")
+
+        running.insert("new")
+        engine.runningAppsChanged()
+        suite.expect(concealer.allowlists.count == 2,
+                     "a launch while concealed drives a second activation through the production path")
+        suite.expect(concealer.allowlists.last == ["a", "new"],
+                     "the re-applied allowlist includes the app that launched")
+
+        // An app that quits needs no activation, and neither does another call
+        // with the same running set: the applied allowlist is now current.
+        running.remove("new")
+        engine.runningAppsChanged()
+        suite.expect(concealer.allowlists.count == 2,
+                     "no re-apply is requested when the applied allowlist still covers the running set")
+    }
+
+    private static func engineLifecycle(_ suite: TestSuite) {
+        // A launch that arrives during an activation is queued, not dropped,
+        // and the queued work uses the newest running set.
+        let concealer = FakeConcealer()
+        var running: Set<String> = ["a", "hidden"]
+        let engine = makeEngine(hidden: ["hidden"], running: { running }, concealer: concealer)
+        engine.collapse { _ in }
+        suite.expect(concealer.allowlists.count == 1, "the first collapse activated once")
+
+        concealer.autoSucceed = false
+        running.insert("b")
+        engine.runningAppsChanged()
+        suite.expect(concealer.allowlists.count == 2, "the first re-apply is in flight")
+
+        running.insert("c")
+        engine.runningAppsChanged()
+        suite.expect(concealer.allowlists.count == 2,
+                     "a launch during the activation does not start an overlapping one")
+        concealer.completeNext()
+        suite.expect(concealer.allowlists.count == 3,
+                     "the queued re-apply runs as soon as the activation settles")
+        suite.expect(concealer.allowlists.last == ["a", "b", "c"],
+                     "the queued re-apply uses the newest running set")
+
+        // Reveal while an activation is in flight: the late token must be
+        // invalidated, not installed over the reveal.
+        let revealConcealer = FakeConcealer()
+        var revealRunning: Set<String> = ["a", "hidden"]
+        let revealEngine = makeEngine(hidden: ["hidden"], running: { revealRunning },
+                                      concealer: revealConcealer)
+        revealEngine.collapse { _ in }
+        revealConcealer.autoSucceed = false
+        revealRunning.insert("b")
+        revealEngine.runningAppsChanged()
+        revealEngine.expand()
+        let lateToken = FakeToken()
+        revealConcealer.completeNext(with: lateToken)
+        suite.expect(revealEngine.state == .expanded,
+                     "an activation that settles after a reveal does not collapse the bar again")
+        suite.expect(lateToken.isInvalidated,
+                     "the token from an activation the user cancelled is invalidated")
+        suite.expect(revealEngine.appliedAllowlist.isEmpty,
+                     "a reveal forgets the applied allowlist")
+
+        // Teardown while an activation is in flight: same guarantee.
+        let stopConcealer = FakeConcealer()
+        var stopRunning: Set<String> = ["a", "hidden"]
+        let stopEngine = makeEngine(hidden: ["hidden"], running: { stopRunning },
+                                    concealer: stopConcealer)
+        stopEngine.collapse { _ in }
+        stopConcealer.autoSucceed = false
+        stopRunning.insert("b")
+        stopEngine.runningAppsChanged()
+        stopEngine.stop()
+        let tornDownToken = FakeToken()
+        stopConcealer.completeNext(with: tornDownToken)
+        suite.expect(tornDownToken.isInvalidated,
+                     "an assertion that arrives after teardown is invalidated")
+        suite.expect(stopEngine.state == .expanded,
+                     "teardown leaves the published state expanded")
+
+        // Nothing selected: the click reports unavailable instead of silently
+        // pretending a collapse happened.
+        let emptyConcealer = FakeConcealer()
+        let emptyEngine = makeEngine(hidden: [], running: { ["a"] }, concealer: emptyConcealer)
+        var emptyResult: MenuBarHidingCollapseResult?
+        emptyEngine.collapse { emptyResult = $0 }
+        suite.expect(emptyResult == .unavailable,
+                     "collapsing with no apps selected reports unavailable")
+        suite.expect(emptyConcealer.allowlists.isEmpty,
+                     "collapsing with no apps selected does not ask the facility for anything")
+    }
+
     private static func transitions(_ suite: TestSuite) {
         suite.expect(MenuBarHidingAssessment.stateAfterActivation(succeeded: true) == .collapsed,
                      "a successful activation collapses the bar")
@@ -78,5 +172,58 @@ enum MenuBarHidingAssessmentTests {
                      "a refused or timed-out activation is unavailable, not a silent no-op")
         suite.expect(MenuBarHidingAssessment.stateAfterReveal() == .expanded,
                      "revealing always returns to expanded")
+    }
+
+    private static func makeEngine(hidden: Set<String>,
+                                   running: @escaping () -> Set<String>,
+                                   concealer: FakeConcealer) -> AssessmentMenuBarHidingEngine {
+        AssessmentMenuBarHidingEngine(items: FakeItems(),
+                                      hiddenBundleIDs: hidden,
+                                      runtime: concealer,
+                                      runningBundleIDs: running,
+                                      reapplyDelay: 0,
+                                      log: { _ in })
+    }
+}
+
+// MARK: - Fakes
+
+private final class FakeItems: MenuBarHidingItemProvider {
+    var toggleItem: NSStatusItem? { nil }
+    var separatorItem: NSStatusItem? { nil }
+    var alwaysHiddenItem: NSStatusItem? { nil }
+}
+
+private final class FakeToken: MenuBarHidingConcealment {
+    private(set) var isInvalidated = false
+
+    func invalidate() {
+        isInvalidated = true
+    }
+}
+
+/// Answers immediately by default, or holds completions so a test can act while
+/// an activation is in flight.
+private final class FakeConcealer: MenuBarHidingAssessmentConcealing {
+    var isAvailable = true
+    var autoSucceed = true
+    private(set) var allowlists: [Set<String>] = []
+    private var pending: [(Result<any MenuBarHidingConcealment,
+                                  MenuBarHidingAssessmentRuntime.Failure>) -> Void] = []
+
+    func conceal(allowing allowed: Set<String>,
+                 completion: @escaping (Result<any MenuBarHidingConcealment,
+                                               MenuBarHidingAssessmentRuntime.Failure>) -> Void) {
+        allowlists.append(allowed)
+        if autoSucceed {
+            completion(.success(FakeToken()))
+        } else {
+            pending.append(completion)
+        }
+    }
+
+    func completeNext(with token: FakeToken = FakeToken()) {
+        guard !pending.isEmpty else { return }
+        pending.removeFirst()(.success(token))
     }
 }
