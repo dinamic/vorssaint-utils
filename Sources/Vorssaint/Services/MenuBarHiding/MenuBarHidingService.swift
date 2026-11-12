@@ -353,7 +353,8 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
                                                   : strings.menuEnableAutoCollapse,
                               action: #selector(toggleAutoCollapseFromMenu)))
 
-        if defaults.bool(forKey: DefaultsKey.menuBarHidingAlwaysHiddenSection) {
+        if mechanism == .width,
+           defaults.bool(forKey: DefaultsKey.menuBarHidingAlwaysHiddenSection) {
             let hideSeparators = defaults.bool(forKey: DefaultsKey.menuBarHidingHideSeparators)
             menu.addItem(menuItem(title: hideSeparators ? strings.menuShowSections
                                                         : strings.menuHideSections,
@@ -400,6 +401,7 @@ final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
     }
 
     private func toggleAlwaysHiddenSection() {
+        guard mechanism == .width else { return }
         let defaults = UserDefaults.standard
         defaults.set(!defaults.bool(forKey: DefaultsKey.menuBarHidingHideSeparators),
                      forKey: DefaultsKey.menuBarHidingHideSeparators)
