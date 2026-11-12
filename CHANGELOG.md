@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Collapse a section of menu bar icons, the way Hidden Bar does. Turn it on in Monitor settings, then hold Command and drag the thin separator between the icons to keep and the ones to hide. Automatic collapse, collapsing as soon as the feature turns on, expanding on hover and a second always hidden section are optional. If a macOS release cannot resize menu bar items, the icons stay visible and the settings card says why.
+
 ## [3.4.4] - 2026-11-11
 
 ### Summary

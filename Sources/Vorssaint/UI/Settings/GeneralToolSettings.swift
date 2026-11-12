@@ -34,6 +34,8 @@ struct GeneralToolSettings: View {
                         }
                     }
                     .settingsSectionAnchor(.panelConfiguration, cornerRadius: 16)
+                    MenuBarHidingSettings()
+                        .settingsSectionAnchor(.menuBarHiding, cornerRadius: 16)
                 case .mixer:
                     MixerSection(settingsMode: true)
                         .settingsSectionAnchor(.mixer, cornerRadius: 16)

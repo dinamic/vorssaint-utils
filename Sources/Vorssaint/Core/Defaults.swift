@@ -434,6 +434,16 @@ enum DefaultsKey {
     static let menuBarUsageBarHighThreshold = "menuBarUsageBarHighThreshold" // percent
     static let menuBarHideIconWithMetrics = "menuBarHideIconWithMetrics" // glyph hides while metrics render in the main item
     static let menuBarIconSymbol = "menuBarIconSymbol" // system symbol name drawn instead of the glyph; empty keeps the glyph
+    // Menu bar hiding: collapsing a section of other apps' icons the way Hidden
+    // Bar does, with a hairline separator the user Command-drags into place.
+    static let menuBarHidingEnabled = "menuBarHidingEnabled" // installs the arrow and separator
+    static let menuBarHidingAutoCollapse = "menuBarHidingAutoCollapse" // put the icons back after a wait
+    static let menuBarHidingAutoCollapseSeconds = "menuBarHidingAutoCollapseSeconds" // wait before that collapse
+    static let menuBarHidingHoverToExpand = "menuBarHidingHoverToExpand" // expand when the pointer rests on the bar
+    static let menuBarHidingHideSeparators = "menuBarHidingHideSeparators" // keep the always hidden section hidden
+    static let menuBarHidingAlwaysHiddenSection = "menuBarHidingAlwaysHiddenSection" // install the second separator
+    static let menuBarHidingStartCollapsed = "menuBarHidingStartCollapsed" // collapse as soon as the feature is on
+    static let menuBarHidingHiddenBundleIDs = "menuBarHidingHiddenBundleIDs" // apps the macOS 27 engine conceals
     static let menuBarMetricOrder = "menuBarMetricOrder" // comma-separated MenuBarMetric raw values
     static let menuBarCombineTemperatures = "menuBarCombineTemperatures" // usage/charge + temperature in one block when possible
     static let menuBarSeparateMetrics = "menuBarSeparateMetrics" // one status item per active metric
@@ -1713,6 +1723,16 @@ enum Defaults {
         DefaultsKey.menuBarUsageBarHighThreshold: 90,
         DefaultsKey.menuBarHideIconWithMetrics: false,
         DefaultsKey.menuBarIconSymbol: "",
+        // Menu bar hiding is opt-in: it puts its own items in the bar, so it
+        // must stay absent until someone asks for it.
+        DefaultsKey.menuBarHidingEnabled: false,
+        DefaultsKey.menuBarHidingAutoCollapse: false,
+        DefaultsKey.menuBarHidingAutoCollapseSeconds: MenuBarHidingAutoCollapse.defaultSeconds,
+        DefaultsKey.menuBarHidingHoverToExpand: false,
+        DefaultsKey.menuBarHidingHideSeparators: false,
+        DefaultsKey.menuBarHidingAlwaysHiddenSection: false,
+        DefaultsKey.menuBarHidingStartCollapsed: false,
+        DefaultsKey.menuBarHidingHiddenBundleIDs: [String](),
         DefaultsKey.windowLayoutHiddenActions: "",
         DefaultsKey.windowLayoutWindowGap: 0,
         DefaultsKey.windowLayoutScreenGap: 0,

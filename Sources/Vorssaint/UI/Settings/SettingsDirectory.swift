@@ -208,6 +208,21 @@ enum SettingsDirectory {
             keywords: [s.showMenuBarIcon, FeatureStrings.generalSettings(language).menuBarIconTitle,
                        FeatureStrings.generalSettings(language).iconMissingTitle, "SF Symbols"]))
         items.append(SettingsSearchSupport.scrollingScreenshotItem(language: language))
+        // The hiding card's own labels live in their own strings type, so
+        // Settings search reaches them through this one entry rather than
+        // through the Monitor page's words.
+        let hiding = FeatureStrings.menuBarHiding(language)
+        items.append(SettingsSearchItem(
+            id: .setting(.menuBarHiding),
+            destination: FeatureSettingsDestination(.general, sectionAnchor: .menuBarHiding),
+            title: hiding.section, icon: "chevron.left",
+            keywords: [hiding.placementHint, hiding.enableToggle, hiding.startCollapsedToggle,
+                       hiding.startCollapsedCaption, hiding.autoCollapseToggle,
+                       hiding.autoCollapseCaption, hiding.autoCollapseSeconds, hiding.hoverToggle,
+                       hiding.alwaysHiddenToggle, hiding.alwaysHiddenCaption, hiding.menuHideSections,
+                       hiding.unavailableTitle, hiding.unavailableCaption,
+                       hiding.assessmentCaption, hiding.appPickerTitle, hiding.appPickerCaption,
+                       hiding.applicationsFolderCaption, hiding.assessmentUnavailableCaption]))
         let alerts = FeatureStrings.monitorAlerts(language)
         items.append(SettingsSearchItem(
             id: .setting(.monitorAlerts), destination: FeatureSettingsDestination(.monitor, sectionAnchor: .monitorAlerts),

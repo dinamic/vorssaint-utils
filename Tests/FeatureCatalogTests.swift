@@ -2269,14 +2269,20 @@ enum FeatureCatalogTests {
         }, "every feature destination is either always visible or gated by that feature")
         suite.expect(AppFeature.allCases.allSatisfy { $0.settingsDestination.hasValidSectionAnchor },
                "every feature anchor belongs to its destination page")
+        // Standalone anchors name a section of a page that has no hub feature of
+        // its own. Menu bar hiding is one: it is a menu bar behavior like hiding
+        // the icon with metrics, so it lives under General's "Menu bar" row
+        // without an AppFeature to gate it.
         suite.expect(Set(AppFeature.allCases.compactMap(\.settingsDestination.sectionAnchor))
                 == Set(SettingsSectionAnchor.allCases).subtracting([
                     .panelConfiguration, .keyboardBrightnessShortcuts, .monitorAlerts, .screenshotScrolling,
+                    .menuBarHiding,
                 ])
                 && SettingsSectionAnchor.panelConfiguration.page == .general
                 && SettingsSectionAnchor.keyboardBrightnessShortcuts.page == .shortcuts
                 && SettingsSectionAnchor.screenshotScrolling.page == .screenshot
-                && SettingsSectionAnchor.monitorAlerts.page == .monitor,
+                && SettingsSectionAnchor.monitorAlerts.page == .monitor
+                && SettingsSectionAnchor.menuBarHiding.page == .general,
                "feature anchors and standalone Settings anchors reach their pages")
         suite.expect(AppFeature.dockPreview.settingsDestination
                 == FeatureSettingsDestination(.dock, sectionAnchor: .dock)
