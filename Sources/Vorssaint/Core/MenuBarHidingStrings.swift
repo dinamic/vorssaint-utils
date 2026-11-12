@@ -30,6 +30,11 @@ struct MenuBarHidingStrings {
     let menuHideSections: String
     let menuSettings: String
     let menuTurnOff: String
+    let startCollapsedToggle: String
+    let startCollapsedCaption: String
+    let separatorAccessibilityLabel: String
+    let unavailableTitle: String
+    let unavailableCaption: String
 }
 
 extension FeatureStrings {
@@ -77,7 +82,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Show Always Hidden Section",
         menuHideSections: "Hide Always Hidden Section",
         menuSettings: "Settings…",
-        menuTurnOff: "Turn Off Menu Bar Hiding"
+        menuTurnOff: "Turn Off Menu Bar Hiding",
+        startCollapsedToggle: "Collapse as soon as it turns on",
+        startCollapsedCaption: "Hides the icons right away instead of waiting for you to click the arrow.",
+        separatorAccessibilityLabel: "Menu bar section separator. Hold Command and drag to place it.",
+        unavailableTitle: "Menu bar hiding is unavailable",
+        unavailableCaption: "This version of macOS does not let Vorssaint resize menu bar items, so the icons cannot be collapsed. Your menu bar was left unchanged."
     )
 
     static let ptBR = MenuBarHidingStrings(
@@ -102,7 +112,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Mostrar seção sempre oculta",
         menuHideSections: "Ocultar seção sempre oculta",
         menuSettings: "Ajustes…",
-        menuTurnOff: "Desativar ocultação da barra de menus"
+        menuTurnOff: "Desativar ocultação da barra de menus",
+        startCollapsedToggle: "Recolher assim que for ativado",
+        startCollapsedCaption: "Oculta os ícones imediatamente, sem esperar que você clique na seta.",
+        separatorAccessibilityLabel: "Separador da seção da barra de menus. Mantenha Command pressionado e arraste para posicioná-lo.",
+        unavailableTitle: "Ocultação na barra de menus indisponível",
+        unavailableCaption: "Esta versão do macOS não permite que o Vorssaint redimensione itens da barra de menus, então os ícones não podem ser recolhidos. Sua barra de menus não foi alterada."
     )
 
     static let tr = MenuBarHidingStrings(
@@ -127,7 +142,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Her zaman gizli bölümü göster",
         menuHideSections: "Her zaman gizli bölümü gizle",
         menuSettings: "Ayarlar…",
-        menuTurnOff: "Menü çubuğu gizlemeyi kapat"
+        menuTurnOff: "Menü çubuğu gizlemeyi kapat",
+        startCollapsedToggle: "Açılır açılmaz daralt",
+        startCollapsedCaption: "Ok simgesine tıklamanızı beklemeden simgeleri hemen gizler.",
+        separatorAccessibilityLabel: "Menü çubuğu bölüm ayırıcısı. Yerleştirmek için Command tuşunu basılı tutup sürükleyin.",
+        unavailableTitle: "Menü çubuğunu gizleme kullanılamıyor",
+        unavailableCaption: "Bu macOS sürümü Vorssaint’in menü çubuğu ögelerini yeniden boyutlandırmasına izin vermediği için simgeler daraltılamıyor. Menü çubuğunuz değiştirilmedi."
     )
 
     static let ru = MenuBarHidingStrings(
@@ -152,7 +172,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Показать всегда скрытый раздел",
         menuHideSections: "Скрыть всегда скрытый раздел",
         menuSettings: "Настройки…",
-        menuTurnOff: "Отключить скрытие строки меню"
+        menuTurnOff: "Отключить скрытие строки меню",
+        startCollapsedToggle: "Сворачивать сразу после включения",
+        startCollapsedCaption: "Скрывает значки сразу, не дожидаясь нажатия на стрелку.",
+        separatorAccessibilityLabel: "Разделитель раздела строки меню. Удерживайте Command и перетащите, чтобы разместить его.",
+        unavailableTitle: "Скрытие строки меню недоступно",
+        unavailableCaption: "Эта версия macOS не позволяет Vorssaint изменять размер элементов строки меню, поэтому значки нельзя свернуть. Строка меню осталась без изменений."
     )
 
     static let es = MenuBarHidingStrings(
@@ -177,7 +202,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Mostrar la sección siempre oculta",
         menuHideSections: "Ocultar la sección siempre oculta",
         menuSettings: "Ajustes…",
-        menuTurnOff: "Desactivar la ocultación en la barra de menús"
+        menuTurnOff: "Desactivar la ocultación en la barra de menús",
+        startCollapsedToggle: "Contraer en cuanto se activa",
+        startCollapsedCaption: "Oculta los iconos de inmediato en lugar de esperar a que pulses la flecha.",
+        separatorAccessibilityLabel: "Separador de la sección de la barra de menús. Mantén Command y arrástralo para colocarlo.",
+        unavailableTitle: "La ocultación en la barra de menús no está disponible",
+        unavailableCaption: "Esta versión de macOS no permite que Vorssaint cambie el tamaño de los elementos de la barra de menús, así que los iconos no se pueden contraer. La barra de menús no se ha modificado."
     )
 
     static let sk = MenuBarHidingStrings(
@@ -202,7 +232,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Zobraziť vždy skrytú časť",
         menuHideSections: "Skryť vždy skrytú časť",
         menuSettings: "Nastavenia…",
-        menuTurnOff: "Vypnúť skrývanie v paneli ponúk"
+        menuTurnOff: "Vypnúť skrývanie v paneli ponúk",
+        startCollapsedToggle: "Zbaliť hneď po zapnutí",
+        startCollapsedCaption: "Skryje ikony okamžite namiesto čakania na kliknutie na šípku.",
+        separatorAccessibilityLabel: "Oddeľovač časti panela ponúk. Podržte Command a presuňte ho na miesto.",
+        unavailableTitle: "Skrývanie v paneli ponúk nie je dostupné",
+        unavailableCaption: "Táto verzia macOS neumožňuje aplikácii Vorssaint meniť veľkosť položiek panela ponúk, preto sa ikony nedajú zbaliť. Panel ponúk zostal nezmenený."
     )
 
     static let de = MenuBarHidingStrings(
@@ -227,7 +262,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Immer ausgeblendeten Bereich einblenden",
         menuHideSections: "Immer ausgeblendeten Bereich ausblenden",
         menuSettings: "Einstellungen…",
-        menuTurnOff: "Ausblenden der Menüleiste ausschalten"
+        menuTurnOff: "Ausblenden der Menüleiste ausschalten",
+        startCollapsedToggle: "Beim Einschalten sofort einklappen",
+        startCollapsedCaption: "Blendet die Symbole sofort aus, statt auf einen Klick auf den Pfeil zu warten.",
+        separatorAccessibilityLabel: "Trenner des Menüleistenbereichs. Halte die Befehlstaste gedrückt und ziehe ihn an seinen Platz.",
+        unavailableTitle: "Ausblenden der Menüleiste ist nicht verfügbar",
+        unavailableCaption: "Diese macOS-Version erlaubt Vorssaint nicht, Elemente der Menüleiste zu vergrößern, daher lassen sich die Symbole nicht einklappen. Deine Menüleiste blieb unverändert."
     )
 
     static let fr = MenuBarHidingStrings(
@@ -252,7 +292,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Afficher la section toujours masquée",
         menuHideSections: "Masquer la section toujours masquée",
         menuSettings: "Réglages…",
-        menuTurnOff: "Désactiver le masquage dans la barre des menus"
+        menuTurnOff: "Désactiver le masquage dans la barre des menus",
+        startCollapsedToggle: "Replier dès l’activation",
+        startCollapsedCaption: "Masque les icônes immédiatement au lieu d’attendre un clic sur la flèche.",
+        separatorAccessibilityLabel: "Séparateur de section de la barre des menus. Maintenez Commande et faites-le glisser pour le placer.",
+        unavailableTitle: "Le masquage dans la barre des menus est indisponible",
+        unavailableCaption: "Cette version de macOS ne permet pas à Vorssaint de redimensionner les éléments de la barre des menus, donc les icônes ne peuvent pas être repliées. Votre barre des menus n’a pas été modifiée."
     )
 
     static let it = MenuBarHidingStrings(
@@ -277,7 +322,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "Mostra la sezione sempre nascosta",
         menuHideSections: "Nascondi la sezione sempre nascosta",
         menuSettings: "Impostazioni…",
-        menuTurnOff: "Disattiva la scomparsa nella barra dei menu"
+        menuTurnOff: "Disattiva la scomparsa nella barra dei menu",
+        startCollapsedToggle: "Comprimi all’attivazione",
+        startCollapsedCaption: "Nasconde subito le icone senza attendere un clic sulla freccia.",
+        separatorAccessibilityLabel: "Separatore della sezione della barra dei menu. Tieni premuto Command e trascinalo per posizionarlo.",
+        unavailableTitle: "La scomparsa nella barra dei menu non è disponibile",
+        unavailableCaption: "Questa versione di macOS non consente a Vorssaint di ridimensionare gli elementi della barra dei menu, quindi le icone non possono essere compresse. La barra dei menu è rimasta invariata."
     )
 
     static let ja = MenuBarHidingStrings(
@@ -302,7 +352,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "常に隠す区画を表示",
         menuHideSections: "常に隠す区画を隠す",
         menuSettings: "設定…",
-        menuTurnOff: "メニューバーの非表示をオフにする"
+        menuTurnOff: "メニューバーの非表示をオフにする",
+        startCollapsedToggle: "オンにしたらすぐ折りたたむ",
+        startCollapsedCaption: "矢印をクリックするのを待たずに、すぐにアイコンを隠します。",
+        separatorAccessibilityLabel: "メニューバーの区画の区切り。Command キーを押したままドラッグして配置します。",
+        unavailableTitle: "メニューバーの非表示は利用できません",
+        unavailableCaption: "このバージョンの macOS では Vorssaint がメニューバーの項目のサイズを変更できないため、アイコンを折りたためません。メニューバーは変更されていません。"
     )
 
     static let ko = MenuBarHidingStrings(
@@ -327,7 +382,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "항상 숨기는 구역 보기",
         menuHideSections: "항상 숨기는 구역 숨기기",
         menuSettings: "설정…",
-        menuTurnOff: "메뉴 막대 숨기기 끄기"
+        menuTurnOff: "메뉴 막대 숨기기 끄기",
+        startCollapsedToggle: "켜면 바로 접기",
+        startCollapsedCaption: "화살표를 클릭할 때까지 기다리지 않고 아이콘을 바로 숨깁니다.",
+        separatorAccessibilityLabel: "메뉴 막대 구역 구분선. Command 키를 누른 채 드래그하여 배치하십시오.",
+        unavailableTitle: "메뉴 막대 숨기기를 사용할 수 없음",
+        unavailableCaption: "이 macOS 버전에서는 Vorssaint가 메뉴 막대 항목의 크기를 조절할 수 없어 아이콘을 접을 수 없습니다. 메뉴 막대는 변경되지 않았습니다."
     )
 
     static let zhHans = MenuBarHidingStrings(
@@ -352,7 +412,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "显示始终隐藏的区域",
         menuHideSections: "隐藏始终隐藏的区域",
         menuSettings: "设置…",
-        menuTurnOff: "关闭菜单栏隐藏"
+        menuTurnOff: "关闭菜单栏隐藏",
+        startCollapsedToggle: "开启后立即折叠",
+        startCollapsedCaption: "无需等待点击箭头，立即隐藏图标。",
+        separatorAccessibilityLabel: "菜单栏区域分隔线。按住 Command 拖动以放置。",
+        unavailableTitle: "菜单栏隐藏不可用",
+        unavailableCaption: "此版本的 macOS 不允许 Vorssaint 调整菜单栏项目的大小，因此无法折叠图标。您的菜单栏未被更改。"
     )
 
     static let zhTW = MenuBarHidingStrings(
@@ -377,7 +442,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "顯示永遠隱藏的區域",
         menuHideSections: "隱藏永遠隱藏的區域",
         menuSettings: "設定…",
-        menuTurnOff: "關閉選單列隱藏"
+        menuTurnOff: "關閉選單列隱藏",
+        startCollapsedToggle: "開啟後立即摺疊",
+        startCollapsedCaption: "不必等待點按箭頭，立即隱藏圖示。",
+        separatorAccessibilityLabel: "選單列區域分隔線。按住 Command 拖曳以放置。",
+        unavailableTitle: "選單列隱藏無法使用",
+        unavailableCaption: "此版本的 macOS 不允許 Vorssaint 調整選單列項目的大小，因此無法摺疊圖示。您的選單列未被變更。"
     )
 
     static let zhHK = MenuBarHidingStrings(
@@ -402,7 +472,12 @@ extension MenuBarHidingStrings {
         menuShowSections: "顯示永遠隱藏的區域",
         menuHideSections: "隱藏永遠隱藏的區域",
         menuSettings: "設定…",
-        menuTurnOff: "關閉選單列隱藏"
+        menuTurnOff: "關閉選單列隱藏",
+        startCollapsedToggle: "開啟後立即摺疊",
+        startCollapsedCaption: "不必等待點按箭嘴，立即隱藏圖示。",
+        separatorAccessibilityLabel: "選單列區域分隔線。按住 Command 拖曳以放置。",
+        unavailableTitle: "選單列隱藏無法使用",
+        unavailableCaption: "此版本的 macOS 不允許 Vorssaint 調整選單列項目的大小，因此無法摺疊圖示。您的選單列未被變更。"
     )
 
     static let uk = MenuBarHidingStrings(
@@ -427,6 +502,11 @@ extension MenuBarHidingStrings {
         menuShowSections: "Показати завжди прихований розділ",
         menuHideSections: "Приховати завжди прихований розділ",
         menuSettings: "Налаштування…",
-        menuTurnOff: "Вимкнути приховування в рядку меню"
+        menuTurnOff: "Вимкнути приховування в рядку меню",
+        startCollapsedToggle: "Згортати одразу після ввімкнення",
+        startCollapsedCaption: "Приховує значки відразу, не чекаючи натискання на стрілку.",
+        separatorAccessibilityLabel: "Розділювач розділу рядка меню. Утримуйте Command і перетягніть, щоб розмістити його.",
+        unavailableTitle: "Приховування в рядку меню недоступне",
+        unavailableCaption: "Ця версія macOS не дозволяє Vorssaint змінювати розмір елементів рядка меню, тому значки не можна згорнути. Рядок меню залишився без змін."
     )
 }

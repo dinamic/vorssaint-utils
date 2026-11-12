@@ -11,8 +11,12 @@ import SwiftUI
 /// options for a feature nobody turned on.
 struct MenuBarHidingSettings: View {
     @ObservedObject private var l10n = L10n.shared
+    /// The live engine state: a collapse this macOS refuses has to be explained
+    /// here, otherwise the switch above it reads as broken.
+    @ObservedObject private var hiding = MenuBarHidingService.shared
 
     @AppStorage(DefaultsKey.menuBarHidingEnabled) private var enabled = false
+    @AppStorage(DefaultsKey.menuBarHidingStartCollapsed) private var startCollapsed = false
     @AppStorage(DefaultsKey.menuBarHidingAutoCollapse) private var autoCollapse = false
     @AppStorage(DefaultsKey.menuBarHidingAutoCollapseSeconds)
     private var autoCollapseSeconds = MenuBarHidingAutoCollapse.defaultSeconds
@@ -39,6 +43,21 @@ struct MenuBarHidingSettings: View {
 
             if enabled {
                 Divider()
+
+                if hiding.state == .unavailable {
+                    SettingsRow(symbol: "exclamationmark.triangle",
+                                title: strings.unavailableTitle,
+                                caption: strings.unavailableCaption) {
+                        EmptyView()
+                    }
+                }
+
+                SettingsRow(symbol: "chevron.down",
+                            title: strings.startCollapsedToggle,
+                            caption: strings.startCollapsedCaption) {
+                    Toggle(strings.startCollapsedToggle, isOn: $startCollapsed)
+                        .labelsHidden()
+                }
 
                 SettingsRow(symbol: "timer",
                             title: strings.autoCollapseToggle,

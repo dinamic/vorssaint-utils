@@ -442,7 +442,7 @@ enum DefaultsKey {
     static let menuBarHidingHoverToExpand = "menuBarHidingHoverToExpand" // expand when the pointer rests on the bar
     static let menuBarHidingHideSeparators = "menuBarHidingHideSeparators" // keep the always hidden section hidden
     static let menuBarHidingAlwaysHiddenSection = "menuBarHidingAlwaysHiddenSection" // install the second separator
-    static let menuBarHidingStartCollapsed = "menuBarHidingStartCollapsed" // collapse once at launch
+    static let menuBarHidingStartCollapsed = "menuBarHidingStartCollapsed" // collapse as soon as the feature is on
     static let menuBarMetricOrder = "menuBarMetricOrder" // comma-separated MenuBarMetric raw values
     static let menuBarCombineTemperatures = "menuBarCombineTemperatures" // usage/charge + temperature in one block when possible
     static let menuBarSeparateMetrics = "menuBarSeparateMetrics" // one status item per active metric
@@ -1730,7 +1730,7 @@ enum Defaults {
         DefaultsKey.menuBarHidingHoverToExpand: false,
         DefaultsKey.menuBarHidingHideSeparators: false,
         DefaultsKey.menuBarHidingAlwaysHiddenSection: false,
-        DefaultsKey.menuBarHidingStartCollapsed: true,
+        DefaultsKey.menuBarHidingStartCollapsed: false,
         DefaultsKey.windowLayoutHiddenActions: "",
         DefaultsKey.windowLayoutWindowGap: 0,
         DefaultsKey.windowLayoutScreenGap: 0,

@@ -150,8 +150,8 @@ enum MenuBarHidingAutoCollapse {
     /// user is hovering or dragging an icon) or while one of our own windows is
     /// in front (Settings is being edited). Deferral re-arms the timer; it
     /// never queues a collapse to fire later.
-    static func shouldWait(pointerInMenuBar: Bool, appIsActive: Bool) -> Bool {
-        pointerInMenuBar || appIsActive
+    static func shouldWait(pointerInMenuBar: Bool, appWindowInFront: Bool) -> Bool {
+        pointerInMenuBar || appWindowInFront
     }
 }
 

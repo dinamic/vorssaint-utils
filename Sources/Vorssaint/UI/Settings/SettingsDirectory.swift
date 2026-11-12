@@ -216,9 +216,11 @@ enum SettingsDirectory {
             id: .setting(.menuBarHiding),
             destination: FeatureSettingsDestination(.monitor, sectionAnchor: .menuBarHiding),
             title: hiding.section, icon: "chevron.left",
-            keywords: [hiding.placementHint, hiding.enableToggle, hiding.autoCollapseToggle,
+            keywords: [hiding.placementHint, hiding.enableToggle, hiding.startCollapsedToggle,
+                       hiding.startCollapsedCaption, hiding.autoCollapseToggle,
                        hiding.autoCollapseCaption, hiding.autoCollapseSeconds, hiding.hoverToggle,
-                       hiding.alwaysHiddenToggle, hiding.alwaysHiddenCaption, hiding.menuHideSections]))
+                       hiding.alwaysHiddenToggle, hiding.alwaysHiddenCaption, hiding.menuHideSections,
+                       hiding.unavailableTitle, hiding.unavailableCaption]))
         let alerts = FeatureStrings.monitorAlerts(language)
         items.append(SettingsSearchItem(
             id: .setting(.monitorAlerts), destination: FeatureSettingsDestination(.monitor, sectionAnchor: .monitorAlerts),

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Vorssaint
 
 import AppKit
+import Combine
 import Foundation
 import os
 
@@ -15,8 +16,13 @@ import os
 ///
 /// Nothing exists until the feature is switched on: with the preference off,
 /// this type holds no status items, no timer and no event monitor.
-final class MenuBarHidingService: MenuBarHidingItemProvider {
+final class MenuBarHidingService: ObservableObject, MenuBarHidingItemProvider {
     static let shared = MenuBarHidingService()
+
+    /// The engine's live state, published so the Settings card can explain a
+    /// fail-open instead of leaving the switch looking broken. Only the engine
+    /// decides it; the service just mirrors it on every refresh.
+    @Published private(set) var state: MenuBarHidingState = .expanded
 
     private static let log = Logger(subsystem: Bundle.main.bundleIdentifier ?? "vorssaint",
                                     category: "menu-bar-hiding")
@@ -84,7 +90,13 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
             return
         }
 
+        // `UserDefaults` announces every write in the app, so a preference this
+        // feature does not read must stop here, before anything touches the bar.
         let installsItems = toggleItem == nil
+        let previous = appliedConfiguration
+        guard installsItems || previous != configuration else { return }
+        appliedConfiguration = configuration
+
         if installsItems { installItems() }
         // The always hidden separator has to exist before the engine can size
         // it, so the item comes first.
@@ -94,10 +106,6 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
         syncHoverMonitor(enabled: configuration.hoverToExpand)
         refreshToggleImage()
 
-        let previous = appliedConfiguration
-        appliedConfiguration = configuration
-        guard installsItems || previous != configuration else { return }
-
         if installsItems {
             // The item has no window yet on this tick, and the arrangement can
             // only be judged from a placed window. Give AppKit a moment.
@@ -106,8 +114,12 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
                     self?.collapse()
                 }
             }
+        } else if configuration.startCollapsed, previous?.startCollapsed != true {
+            // Switching the option on while the feature is already running has
+            // to show what it does, otherwise the toggle looks inert.
+            collapse()
         } else {
-            syncAutoCollapseTimer(collapsed: engine?.state == .collapsed)
+            syncAutoCollapseTimer(collapsed: state == .collapsed)
         }
     }
 
@@ -188,13 +200,23 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
             button.target = self
             button.action = #selector(itemPressed(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            // This separator is the only handle the whole placement flow
+            // depends on, so it cannot be an unlabeled button to VoiceOver.
+            button.toolTip = strings.separatorAccessibilityLabel
+            button.setAccessibilityLabel(strings.separatorAccessibilityLabel)
         }
 
         toggleItem = toggle
         separatorItem = separator
-        engine = LengthMenuBarHidingEngine(items: self, log: { message in
+        let engine = LengthMenuBarHidingEngine(items: self, log: { message in
             Self.log.debug("\(message, privacy: .public)")
         })
+        // A fail-open happens after the engine already reported a collapse, so
+        // the arrow and the Settings card have to hear about it from here.
+        engine.stateDidChange = { [weak self] in
+            self?.refreshToggleImage()
+        }
+        self.engine = engine
         refreshToggleImage()
         Self.log.debug("menu bar items installed")
     }
@@ -236,6 +258,7 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
         separatorItem = nil
         toggleItem = nil
         engine = nil
+        state = .expanded
         // macOS keeps a removed item's saved position and visibility under its
         // autosave name. Left behind, the next install would come back at an
         // old spot with an old collapsed width.
@@ -263,9 +286,22 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
     private func showContextMenu(from button: NSStatusBarButton) {
         let strings = self.strings
         let menu = NSMenu()
+        // A mechanism this macOS ignores has to be said out loud: the two
+        // commands below cannot work, and a menu that silently does nothing is
+        // exactly the broken look the fail-open state exists to avoid.
+        let unavailable = state == .unavailable
 
-        menu.addItem(menuItem(title: strings.menuExpand, action: #selector(expandFromMenu)))
-        menu.addItem(menuItem(title: strings.menuCollapse, action: #selector(collapseFromMenu)))
+        let expandItem = menuItem(title: strings.menuExpand, action: #selector(expandFromMenu))
+        expandItem.isEnabled = !unavailable
+        menu.addItem(expandItem)
+        let collapseItem = menuItem(title: strings.menuCollapse, action: #selector(collapseFromMenu))
+        collapseItem.isEnabled = !unavailable
+        menu.addItem(collapseItem)
+        if unavailable {
+            let notice = NSMenuItem(title: strings.unavailableTitle, action: nil, keyEquivalent: "")
+            notice.isEnabled = false
+            menu.addItem(notice)
+        }
         menu.addItem(.separator())
 
         let defaults = UserDefaults.standard
@@ -355,8 +391,12 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
             // Never yank the bar shut mid-interaction. The wait re-arms rather
             // than queues, so a pointer resting in the bar cannot pile up a
             // backlog of collapses.
+            // `isActive` alone is app-wide: an accessory app can be "active"
+            // with no window in front. Requiring a key window matches the
+            // intent, which is "Settings is open and being edited".
+            let windowInFront = NSApp.isActive && NSApp.keyWindow != nil
             if MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: self.isPointerInMenuBar,
-                                                    appIsActive: NSApp.isActive) {
+                                                    appWindowInFront: windowInFront) {
                 self.startAutoCollapseTimer(seconds: Configuration().autoCollapseSeconds)
             } else {
                 self.collapse()
@@ -424,9 +464,19 @@ final class MenuBarHidingService: MenuBarHidingItemProvider {
     }
 
     private func refreshToggleImage() {
+        let current = engine?.state ?? .expanded
+        // Published so the Settings card can explain a fail-open. Assigned only
+        // on change: `objectWillChange` on every pass would redraw the card.
+        if state != current { state = current }
         guard let button = toggleItem?.button else { return }
-        let collapsed = engine?.state == .collapsed
         let strings = self.strings
+        guard current != .unavailable else {
+            button.image = Self.chevronImage(collapsed: false, isLeftToRight: isLeftToRight)
+            button.toolTip = strings.unavailableTitle
+            button.setAccessibilityLabel(strings.unavailableTitle)
+            return
+        }
+        let collapsed = current == .collapsed
         button.image = Self.chevronImage(collapsed: collapsed, isLeftToRight: isLeftToRight)
         button.toolTip = collapsed ? strings.expandTooltip : strings.collapseTooltip
         button.setAccessibilityLabel(collapsed ? strings.expandAccessibilityLabel

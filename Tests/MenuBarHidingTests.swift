@@ -120,11 +120,11 @@ enum MenuBarHidingTests {
         suite.expect(!MenuBarHidingAutoCollapse.shouldArmTimer(enabled: false, collapsed: false),
                      "no countdown runs while auto collapse is off")
 
-        suite.expect(MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: true, appIsActive: false),
+        suite.expect(MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: true, appWindowInFront: false),
                      "a collapse waits while the pointer is inside the menu bar")
-        suite.expect(MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: false, appIsActive: true),
+        suite.expect(MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: false, appWindowInFront: true),
                      "a collapse waits while one of our windows is in front")
-        suite.expect(!MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: false, appIsActive: false),
+        suite.expect(!MenuBarHidingAutoCollapse.shouldWait(pointerInMenuBar: false, appWindowInFront: false),
                      "nothing in the way means the collapse happens")
     }
 

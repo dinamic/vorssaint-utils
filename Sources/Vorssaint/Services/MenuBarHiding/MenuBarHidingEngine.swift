@@ -20,6 +20,11 @@ protocol MenuBarHidingItemProvider: AnyObject {
 protocol MenuBarHidingEngine: AnyObject {
     var state: MenuBarHidingState { get }
 
+    /// Called whenever `state` changed without the service asking for it, so
+    /// the arrow and the Settings card can follow a fail-open. A collapse the
+    /// service requested is reported through its completion instead.
+    var stateDidChange: (() -> Void)? { get set }
+
     func collapse(completion: @escaping (MenuBarHidingCollapseResult) -> Void)
     func expand()
 
@@ -30,10 +35,6 @@ protocol MenuBarHidingEngine: AnyObject {
     /// Whether the user's `⌘`-drag arrangement lets anything be hidden: the
     /// separator has to sit on the hidden side of the arrow.
     var isArrangementValid: Bool { get }
-
-    /// Whether the always hidden separator sits beyond the regular one. Without
-    /// that the always hidden section cannot be told apart from the hidden one.
-    var isAlwaysHiddenSeparatorPlaced: Bool { get }
 
     /// Display geometry changed. A collapsed bar has to take the new width,
     /// otherwise a display hot-plug leaves the separator at a stale size.
@@ -47,6 +48,8 @@ protocol MenuBarHidingEngine: AnyObject {
 /// The state is derived from the live separator width rather than stored, so it
 /// cannot drift when the width is recomputed while collapsed.
 final class LengthMenuBarHidingEngine: MenuBarHidingEngine {
+    var stateDidChange: (() -> Void)?
+
     private weak var items: MenuBarHidingItemProvider?
     private let widestScreenWidth: () -> CGFloat
     private let isLeftToRight: () -> Bool
@@ -132,12 +135,6 @@ final class LengthMenuBarHidingEngine: MenuBarHidingEngine {
                                                isLeftToRight: isLeftToRight())
     }
 
-    var isAlwaysHiddenSeparatorPlaced: Bool {
-        MenuBarHidingLayout.isOnHiddenSide(itemX(items?.alwaysHiddenItem),
-                                           of: itemX(items?.separatorItem),
-                                           isLeftToRight: isLeftToRight())
-    }
-
     private func applyAlwaysHiddenSection() {
         guard let alwaysHidden = items?.alwaysHiddenItem else { return }
         alwaysHidden.length = MenuBarHidingLayout.alwaysHiddenSeparatorLength(
@@ -170,6 +167,10 @@ final class LengthMenuBarHidingEngine: MenuBarHidingEngine {
             // is not doing anything.
             separator.length = MenuBarHidingLayout.expandedSeparatorLength
             self.applyAlwaysHiddenSection()
+            // The state is latched to `unavailable` now; without this the arrow
+            // would keep the collapsed glyph and every later press would look
+            // like an ignored click.
+            self.stateDidChange?()
         }
     }
 
